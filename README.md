@@ -101,7 +101,13 @@ Our model achieves the following performance on UVG-HD with a single NVIDIA V100
 
 ## Citation
 ```
+@inproceedings{
+    kim2022scalable,
+    title={Scalable Neural Video Representations with Learnable Positional Features},
+    author={Kim, Subin and Yu, Sihyun and Lee, Jaeho and Shin, Jinwoo},
+    booktitle={Advances in Neural Information Processing Systems},
+    year={2022},
+}
 ```
-
 ## References
 We used the code from following repositories: [SIREN](https://github.com/vsitzmann/siren), [Modulation](https://github.com/lucidrains/siren-pytorch), [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn)
