@@ -3,8 +3,8 @@
 Official PyTorch implementation of
 ["**Scalable Neural Video Representations with Leanable Positional Features**"](
 https://arxiv.org/xxxxx) (NeurIPS 2022) by
-[Subin Kim](https://subin-kim-cv.github.io/)<sup>*,1</sup>,
-[Sihyun Yu](https://sihyun.me/)<sup>*,1</sup>,
+[Subin Kim*](https://subin-kim-cv.github.io/)<sup>1</sup>,
+[Sihyun Yu*](https://sihyun.me/)<sup>1</sup>,
 [Jaeho Lee](https://jaeho-lee.github.io/)<sup>2</sup>,
 and [Jinwoo Shin](https://alinlab.kaist.ac.kr/shin.html)<sup>1</sup>.
 
