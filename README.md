@@ -31,8 +31,8 @@ pip install git+https://github.com/subin-kim-cv/tiny-cuda-nn/#subdirectory=bindi
 ```
 * This repository of [tiny-cuda-nn](https://github.com/subin-kim-cv/tiny-cuda-nn) is slightly different from original implementation of [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn)
 
-### Datasets
-First, download the UVG-HD datasets from the following links:
+### Dataset
+First, download the UVG-HD dataset from the following link:
 
 * [UVG-HD](http://ultravideo.fi/#testsequences)
 
