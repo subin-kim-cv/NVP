@@ -32,7 +32,7 @@ First, download the UVG-HD datasets from the following links:
 
 * [UVG-HD](http://ultravideo.fi/#testsequences)
 
-Then, extract RGB sequences from the original YUV videos of UVG-HD using [ffmpeg] (https://ffmpeg.org/download.html). Here, INPUT is the input file name, and OUTPUT is a directory to save decompressed RGB frames.
+Then, extract RGB sequences from the original YUV videos of UVG-HD using [ffmpeg](https://ffmpeg.org/download.html). Here, INPUT is the input file name, and OUTPUT is a directory to save decompressed RGB frames.
 
 ```
 ffmpeg -f rawvideo -vcodec rawvideo -s 1920x1080 -r 120 -pix_fmt yuv420p \ -i INPUT.yuv OUTPUT/f%05d.png
