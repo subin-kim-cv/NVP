@@ -1,0 +1,40 @@
+{
+  "nvp": {
+      "2d_encoding_xy": {
+          "otype": "DenseGrid",
+          "n_levels": 16,
+          "n_features_per_level": 2,
+          "log2_hashmap_size": 32,
+          "base_resolution": 16,
+          "per_level_scale": 1.35
+      },
+      "2d_encoding_xt": {
+          "otype": "DenseGrid",
+          "n_levels": 16,
+          "n_features_per_level": 2,
+          "log2_hashmap_size": 32,
+          "base_resolution": 16,
+          "per_level_scale": 1.35
+      },
+      "2d_encoding_yt": {
+          "otype": "DenseGrid",
+          "n_levels": 16,
+          "n_features_per_level": 2,
+          "log2_hashmap_size": 32,
+          "base_resolution": 16,
+          "per_level_scale": 1.35
+      },
+      "3d_encoding": {
+          "otype": "SparseGrid",
+          "n_features_per_level": 2,
+          "x_resolution": 300,
+          "y_resolution": 300,
+          "t_resolution": 600,
+          "upsample": false
+      },
+      "network": {
+          "n_neurons": 128,
+          "n_hidden_layers": 3
+      }
+  }
+}
