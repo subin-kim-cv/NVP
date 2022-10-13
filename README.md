@@ -1,7 +1,7 @@
-# Scalable Neural Video Representations with Leanable Positional Features (NVP)
+# Scalable Neural Video Representations with Learnable Positional Features (NVP)
 
 Official PyTorch implementation of
-["**Scalable Neural Video Representations with Leanable Positional Features**"](
+["**Scalable Neural Video Representations with Learnable Positional Features**"](
 https://arxiv.org/xxxxx) (NeurIPS 2022) by
 [Subin Kim*](https://subin-kim-cv.github.io/)<sup>1</sup>,
 [Sihyun Yu*](https://sihyun.me/)<sup>1</sup>,
@@ -10,7 +10,7 @@ and [Jinwoo Shin](https://alinlab.kaist.ac.kr/shin.html)<sup>1</sup>.
 
 <sup>1</sup>KAIST, <sup>2</sup>POSTECH
 
-**TL;DR**: We propose a novel neural representation for videos that is the best of both worlds; achieved high-quality encoding and the compute-/parameter efficiency simultaneously 
+**TL;DR**: We propose a novel neural representation for videos that is the best of both worlds; achieved high-quality encoding and the compute-/parameter efficiency simultaneously. 
 
 ### [Project Page](https://subin-kim-cv.github.io/NVP) | [Paper](xxxx) | [Slide](https://subin-kim-cv.github.io/assets/2022_NVP/slide/kim2022NVP.pdf) 
 
@@ -43,7 +43,7 @@ ffmpeg -f rawvideo -vcodec rawvideo -s 1920x1080 -r 120 -pix_fmt yuv420p -i INPU
 ```
 
 ## 2. Training
-Run the code with a single GPU.
+Run the following script with a single GPU.
 
 ```train
 CUDA_VISIBLE_DEVICES=0 python experiment_scripts/train_video.py --logging_root ./logs_nvp --experiment_name <EXPERIMENT_NAME> --dataset <DATASET> --num_frames <NUM_FRAMES> --config ./config/config_nvp_s.json 
@@ -55,7 +55,7 @@ CUDA_VISIBLE_DEVICES=0 python experiment_scripts/train_video.py --logging_root .
 * To reconstruct videos with 300 frames, please change the values of `t_resolution` in configuration file to 300.
 
 ## 3. Evaluation
-Evaluation without compression of parameters (i.e., only quantize)
+Evaluation without compression of parameters (i.e., qunatization only)
 ```
 CUDA_VISIBLE_DEVICES=0 python experiment_scripts/eval.py --logging_root ./logs_nvp --experiment_name <EXPERIMENT_NAME> --dataset <DATASET> --num_frames <NUM_FRAMES> --config ./logs_nvp/<EXPERIMENT_NAME>/config_nvp_s.json   
 ```
@@ -64,7 +64,7 @@ CUDA_VISIBLE_DEVICES=0 python experiment_scripts/eval.py --logging_root ./logs_n
 * One can specify an option `--t_interp` for a video frame interpolation results. It denotes the temporal interpolation scale (e.g., 8).
 
 
-Evaluation with compression of parameters using well-known image and video codecs
+Evaluation with compression of parameters using well-known image and video codecs.
 
 1. Save the quantized parameters.
     ```
@@ -87,7 +87,7 @@ Evaluation with compression of parameters using well-known image and video codec
     * Please specify the option `--qscale`, `--crf`, `--framerate` as same with the values in the `compression.ipynb`.
 
 ## 4. Results
-Reconstructed video results of NVP on UVG-HD, more temporally dynamic vidoes and 4K resolution of temporally long video are available at the following [project page](https://subin-kim-cv.github.io/NVP/).
+Reconstructed video results of NVP on UVG-HD, and other 4K/long/temporally dynamic videos are available at the following [project page](https://subin-kim-cv.github.io/NVP/).
 
 Our model achieves the following performance on UVG-HD with a single NVIDIA V100 32GB GPU:
 
