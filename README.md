@@ -3,10 +3,14 @@
 Official PyTorch implementation of
 ["**Scalable Neural Video Representations with Leanable Positional Features**"](
 https://arxiv.org/xxxxx) (NeurIPS 2022) by
-[Subin Kim*](https://subin-kim-cv.github.io/),
-[Sihyun Yu*](https://sihyun.me/),
-[Jaeho Lee](https://jaeho-lee.github.io/),
-and [Jinwoo Shin](https://alinlab.kaist.ac.kr/shin.html).
+[Subin Kim](https://subin-kim-cv.github.io/)<sup>*,1</sup>,
+[Sihyun Yu](https://sihyun.me/)<sup>*,1</sup>,
+[Jaeho Lee](https://jaeho-lee.github.io/)<sup>2</sup>,
+and [Jinwoo Shin](https://alinlab.kaist.ac.kr/shin.html)<sup>1</sup>.
+
+<sup>1</sup>KAIST, <sup>2</sup>POSTECH
+
+**TL;DR**: We propose a novel neural representation for videos that is the best of both worlds; achieved high-quality encoding and the compute-/parameter efficiency simultaneously 
 
 ### [Project Page](https://subin-kim-cv.github.io/NVP) | [Paper](xxxx) | [Slide](https://subin-kim-cv.github.io/assets/2022_NVP/slide/kim2022NVP.pdf) 
 
