@@ -93,9 +93,7 @@ Our model achieves the following performance on UVG-HD with a single NVIDIA V100
 |   ~10 minutes  |  0.901 | 35.79 $\pm$ 2.31   | 0.065 $\pm$ 0.016  | 0.160 $\pm$ 0.098  |
 |     ~1 hour    |  0.901 | 37.61 $\pm$ 2.20   | 0.052 $\pm$ 0.011  | 0.145 $\pm$ 0.106  |
 |     ~8 hours   |  0.210 | 36.46 $\pm$ 2.18   | 0.067 $\pm$ 0.017  | 0.135 $\pm$ 0.083  |
-* Beauty, Bosphorus, Honeybee, Jockey, ReadySetGo, ShakeNDry, Yachtride in UVG-HD
-* [LPIPS](https://github.com/richzhang/PerceptualSimilarity)
-* [FLIP](https://github.com/NVlabs/flip)
+* The reported values are averaged over the Beauty, Bosphorus, Honeybee, Jockey, ReadySetGo, ShakeNDry, and Yachtride videos in UVG-HD and measured using [LPIPS](https://github.com/richzhang/PerceptualSimilarity), [FLIP](https://github.com/NVlabs/flip) repositories.
 
 ## Citation
 ```
