@@ -29,10 +29,10 @@ conda install pytorch torchvision cudatoolkit=11.3 -c pytorch
 
 pip install git+https://github.com/subin-kim-cv/tiny-cuda-nn/#subdirectory=bindings/torch
 ```
-* This repository of [tiny-cuda-nn](https://github.com/subin-kim-cv/tiny-cuda-nn) is slightly different from original implementation of [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn)
+* This repository of [tiny-cuda-nn](https://github.com/subin-kim-cv/tiny-cuda-nn) is slightly different from original implementation of [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn).
 
 ### Dataset
-First, download the UVG-HD dataset from the following link:
+Download the UVG-HD dataset from the following link:
 
 * [UVG-HD](http://ultravideo.fi/#testsequences)
 
@@ -55,7 +55,7 @@ CUDA_VISIBLE_DEVICES=0 python experiment_scripts/train_video.py --logging_root .
 * To reconstruct videos with 300 frames, please change the values of `t_resolution` in configuration file to 300.
 
 ## 3. Evaluation
-Evaluation without compression of parameters (i.e., qunatization only)
+Evaluation without compression of parameters (i.e., qunatization only).
 ```
 CUDA_VISIBLE_DEVICES=0 python experiment_scripts/eval.py --logging_root ./logs_nvp --experiment_name <EXPERIMENT_NAME> --dataset <DATASET> --num_frames <NUM_FRAMES> --config ./logs_nvp/<EXPERIMENT_NAME>/config_nvp_s.json   
 ```
@@ -110,4 +110,4 @@ Our model achieves the following performance on UVG-HD with a single NVIDIA V100
 }
 ```
 ## References
-We used the code from following repositories: [SIREN](https://github.com/vsitzmann/siren), [Modulation](https://github.com/lucidrains/siren-pytorch), [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn)
+We used the code from following repositories: [SIREN](https://github.com/vsitzmann/siren), [Modulation](https://github.com/lucidrains/siren-pytorch), [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn).
