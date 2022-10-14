@@ -12,7 +12,7 @@ and [Jinwoo Shin](https://alinlab.kaist.ac.kr/shin.html)<sup>1</sup>.
 
 **TL;DR**: We propose a novel neural representation for videos that is the best of both worlds; achieved high-quality encoding and the compute-/parameter- efficiency simultaneously. 
 
-### [Project Page](https://subin-kim-cv.github.io/NVP) | [Paper](xxxx) | [Slide](https://subin-kim-cv.github.io/assets/2022_NVP/slide/kim2022NVP.pdf) 
+### [Project Page](https://subin-kim-cv.github.io/NVP) | [Paper](https://arxiv.org/abs/2210.06823) 
 
 <p align="center">
     <img src=figures/teaser_dynamic_compressed.gif width="900"> 
