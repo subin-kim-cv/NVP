@@ -1,4 +1,4 @@
-# Scalable Neural Video Representations with Learnable Positional Features (NVP), NeurIPS 2022
+# Scalable Neural Video Representations with Learnable Positional Features (NVP)
 
 Official PyTorch implementation of
 ["**Scalable Neural Video Representations with Learnable Positional Features**"](
