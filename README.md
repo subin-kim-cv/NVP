@@ -1,4 +1,4 @@
-# Scalable Neural Video Representations with Learnable Positional Features (NVP)
+# Scalable Neural Video Representations with Learnable Positional Features (NVP), NeurIPS 2022
 
 Official PyTorch implementation of
 ["**Scalable Neural Video Representations with Learnable Positional Features**"](
@@ -98,6 +98,8 @@ Our model achieves the following performance on UVG-HD with a single NVIDIA V100
 |     ~1 hour    |  0.901 | 37.61 $\pm$ 2.20   | 0.052 $\pm$ 0.011  | 0.145 $\pm$ 0.106  |
 |     ~8 hours   |  0.210 | 36.46 $\pm$ 2.18   | 0.067 $\pm$ 0.017  | 0.135 $\pm$ 0.083  |
 * The reported values are averaged over the Beauty, Bosphorus, Honeybee, Jockey, ReadySetGo, ShakeNDry, and Yachtride videos in UVG-HD and measured using [LPIPS](https://github.com/richzhang/PerceptualSimilarity), [FLIP](https://github.com/NVlabs/flip) repositories.
+
+One can download the pretrained checkpoints from the following [link](https://drive.google.com/drive/folders/1jlmrPHjjZtr1WYLFJUOkfmdLavpaCZwr?usp=share_link)
 
 ## Citation
 ```
