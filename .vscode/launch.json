@@ -1,0 +1,38 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.1.0",
+    "configurations": [
+        {
+            "name": "Train NVP",
+            "type": "python",
+            "request": "launch",
+            "module": "experiment_scripts.train_video",
+            "justMyCode": true,
+            "args": [
+                "--logging_root=./logs",
+                "--experiment_name=EM-25",
+                "--dataset=data/EM-25",
+                "--num_frames=128",
+                "--config=./config/config_nvp_s.json"
+            ]
+        },
+        {
+            "name": "Eval NVP",
+            "type": "python",
+            "request": "launch",
+            "module": "experiment_scripts.eval",
+            "justMyCode": true,
+            "args": [
+                "--logging_root=./logs",
+                "--experiment_name=EM-25",
+                "--dataset=data/EM-25",
+                "--num_frames=128",
+                "--config=./logs/EM-25/config.json",
+                "--save",
+                "--t_interp=1"
+            ]
+        }
+    ]
+}

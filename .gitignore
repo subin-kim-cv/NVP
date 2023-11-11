@@ -1,0 +1,6 @@
+*.png
+*.zip
+events*
+*.pyc
+*.npy
+*.pt
