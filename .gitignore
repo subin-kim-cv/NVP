@@ -4,3 +4,4 @@ events*
 *.pyc
 *.npy
 *.pt
+logs/**
