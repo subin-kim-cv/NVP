@@ -101,6 +101,7 @@ class Modulator(nn.Module):
         for ind in range(num_layers):
             is_first = ind == 0
             dim = dim_in if is_first else (dim_hidden + dim_in)
+            print("Linear Layer with, input: ", dim, " output: ", dim_hidden)
             self.layers.append(nn.Sequential(
                 nn.Linear(dim, dim_hidden),
                 nn.LeakyReLU()

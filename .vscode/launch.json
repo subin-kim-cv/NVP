@@ -31,7 +31,7 @@
                 "--num_frames=128",
                 "--config=./logs/EM-25/config.json",
                 "--save",
-                "--t_interp=1"
+                "--t_interp=4"
             ]
         }
     ]

@@ -29,8 +29,8 @@
           "n_features_per_level": 2,
           "x_resolution": 300,
           "y_resolution": 300,
-          "t_resolution": 600,
-          "upsample": false
+          "t_resolution": 128,
+          "upsample": true
       },
       "network": {
           "n_neurons": 128,
