@@ -129,7 +129,7 @@ class SparseGrid(nn.Module):
             for j in unfold_list:
                 vx = torch.clamp(x_coord_idx+i, 0, x_res-1)
                 vy = torch.clamp(y_coord_idx+j, 0, y_res-1)
-                feat = (self.embeddings[t_coord_idx_lower, vx, vy, :])
+                feat = (tmp_embeddings[t_coord_idx_lower, vx, vy, :])
                 feat *= lower_coeff
                 if grid_features_1 == None:
                     grid_features_1 = feat
@@ -144,7 +144,7 @@ class SparseGrid(nn.Module):
             for j in unfold_list:
                 vx = torch.clamp(x_coord_idx+i, 0, x_res-1)
                 vy = torch.clamp(y_coord_idx+j, 0, y_res-1)
-                feat = (self.embeddings[t_coord_idx_upper, vx, vy, :])
+                feat = (tmp_embeddings[t_coord_idx_upper, vx, vy, :])
                 feat *= upper_coeff
                 if grid_features_2 == None:
                     grid_features_2 = feat
