@@ -10,7 +10,7 @@ import webbrowser
 
 def add_example_layers(state):
     a = np.load(
-        "/home/jakobtroidl/Desktop/NVP/reconstructed-nvp-25-s.npy"
+        "/home/jakobtroidl/Desktop/NVP/reconstructed-nvp-25-t.npy"
     )
 
     b = a < 0.08160067

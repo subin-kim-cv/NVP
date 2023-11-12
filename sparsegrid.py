@@ -26,10 +26,12 @@ class SparseGrid(nn.Module):
         if self.upsample:
             # upsampling sparse positional features
             tmp_embeddings = self.embeddings.permute(3, 0, 1, 2) # dim, T, H, W
-            tmp_embeddings = torch.nn.functional.interpolate(tmp_embeddings, scale_factor=2, mode='bilinear')
+            tmp_embeddings = tmp_embeddings.unsqueeze(0)
+            tmp_embeddings = torch.nn.functional.interpolate(tmp_embeddings, scale_factor=2, mode='trilinear')
+            tmp_embeddings = tmp_embeddings.squeeze()
             tmp_embeddings = tmp_embeddings.permute(1, 2, 3, 0)
             tmp_shape = tmp_embeddings.shape
-            t_res = self.t_resolution
+            t_res = tmp_shape[0]
             x_res = tmp_shape[1]
             y_res = tmp_shape[2]
 
@@ -79,10 +81,12 @@ class SparseGrid(nn.Module):
         if self.upsample:
             # upsampling sparse positional features
             tmp_embeddings = self.embeddings.permute(3, 0, 1, 2) # dim, T, H, W
-            tmp_embeddings = torch.nn.functional.interpolate(tmp_embeddings, scale_factor=2, mode='bilinear')
+            tmp_embeddings = tmp_embeddings.unsqueeze(0)
+            tmp_embeddings = torch.nn.functional.interpolate(tmp_embeddings, scale_factor=2, mode='trilinear')
+            tmp_embeddings = tmp_embeddings.squeeze()
             tmp_embeddings = tmp_embeddings.permute(1, 2, 3, 0)
             tmp_shape = tmp_embeddings.shape
-            t_res = self.t_resolution
+            t_res = tmp_shape[0]
             x_res = tmp_shape[1]
             y_res = tmp_shape[2]
 
