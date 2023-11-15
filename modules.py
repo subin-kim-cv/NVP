@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import tinycudann as tcnn
 import modulation
 from sparsegrid import SparseGrid
+from edsr import EDSR
        
 class NVP(nn.Module):
 
@@ -21,6 +22,8 @@ class NVP(nn.Module):
         # learnable keyframes xt
         self.keyframes_xt = tcnn.Encoding(n_input_dims=2, encoding_config=encoding_config["2d_encoding_xt"]) # torch.Tensor     
         assert self.keyframes_xt.dtype == torch.float32
+
+        self.encoder = EDSR(args = encoding_config["encoder"])
 
         self.sparse_grid = SparseGrid(level_dim=encoding_config["3d_encoding"]["n_features_per_level"], 
                                     x_resolution=encoding_config["3d_encoding"]["x_resolution"],
@@ -42,13 +45,16 @@ class NVP(nn.Module):
         latent_dim = encoding_config["2d_encoding_xy"]["n_levels"]*(encoding_config["2d_encoding_xy"]["n_features_per_level"])
         latent_dim += encoding_config["2d_encoding_yt"]["n_levels"]*(encoding_config["2d_encoding_yt"]["n_features_per_level"])
         latent_dim += encoding_config["2d_encoding_xt"]["n_levels"]*(encoding_config["2d_encoding_xt"]["n_features_per_level"])
-        latent_dim += (encoding_config["3d_encoding"]["n_features_per_level"])*9
+        latent_dim += (encoding_config["3d_encoding"]["n_features_per_level"]) # * 9
 
         self.wrapper = modulation.SirenWrapper(self.net, latent_dim = latent_dim)
 
         print(self)
 
     def forward(self, model_input, temporal_interp=False, params=None):
+
+
+        features = self.encoder(model_input)
 
         timesteps = model_input['temporal_steps']
         b, t = timesteps.size(0), timesteps.size(1)
