@@ -12,9 +12,9 @@
             "justMyCode": true,
             "args": [
                 "--logging_root=./logs",
-                "--experiment_name=EM-25",
-                "--dataset=data/EM-25",
-                "--num_frames=128",
+                "--experiment_name=me-ready-set-go",
+                "--dataset=data/readysetgo",
+                "--num_frames=20",
                 "--config=./config/config_nvp_s.json"
             ]
         },
@@ -26,7 +26,7 @@
             "justMyCode": true,
             "args": [
                 "--logging_root=./logs",
-                "--experiment_name=EM-25",
+                "--experiment_name=EM-small",
                 "--dataset=data/EM-25",
                 "--num_frames=128",
                 "--config=./logs/EM-25/config.json",
