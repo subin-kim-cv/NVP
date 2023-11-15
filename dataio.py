@@ -1,5 +1,6 @@
 import glob
 import os
+import re
 
 import numpy as np
 import skvideo.io
@@ -28,6 +29,11 @@ def get_mgrid(sidelen, dim=2):
     pixel_coords = torch.Tensor(pixel_coords).view(-1, dim)
     return pixel_coords
 
+def sort_key(path):
+    # Extract numbers and convert them to integers
+    numbers = re.findall(r'\d+', path)
+    return [int(num) for num in numbers]
+
 
 
 class VideoTime(Dataset):
@@ -49,7 +55,7 @@ class VideoTime(Dataset):
         else:
             print(" imgs")
             video_path = os.path.join(path_to_video, "*.png")
-            files = sorted(glob.glob(video_path))[:self.split_num]
+            files = sorted(glob.glob(video_path), key=sort_key)[:self.split_num]
             tmp_img = Image.open(files[0])
             tmp_img  = np.array(tmp_img)
             tmp_shape = tmp_img.shape
