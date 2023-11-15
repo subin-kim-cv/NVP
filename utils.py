@@ -35,6 +35,10 @@ def write_result_img(experiment_name, filename, img):
     img = img.detach().cpu().numpy()
     np.save(os.path.join(trgt_dir, filename), img)
 
+def write_volume_summary(volume_dataset, model, model_input, gt, writer, total_steps, prefix='train_'):
+    print("write_volume_summary")
+    PSNR = 0.0 # TODO
+    return PSNR
 
 
 def write_video_time_summary(vid_dataset, model, model_input, gt, writer, total_steps, prefix='train_'):

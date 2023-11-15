@@ -33,6 +33,20 @@
                 "--save",
                 "--t_interp=4"
             ]
-        }
+        },
+        {
+            "name": "Train Volume",
+            "type": "python",
+            "request": "launch",
+            "module": "experiment_scripts.train_volume",
+            "justMyCode": true,
+            "args": [
+                "--logging_root=./logs",
+                "--experiment_name=volume-encoder",
+                "--dataset=data/volumes/res-64/info.json",
+                "--num_frames=20",
+                "--config=./config/config_nvp_s.json"
+            ]
+        },
     ]
 }

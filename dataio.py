@@ -2,12 +2,14 @@ import glob
 import os
 import re
 
+import random
+
 import numpy as np
 import skvideo.io
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
-
+import json
 
 def get_mgrid(sidelen, dim=2):
     '''Generates a flattened grid of (x,y,...) coordinates in a range of 0 to 1.'''
@@ -34,7 +36,85 @@ def sort_key(path):
     numbers = re.findall(r'\d+', path)
     return [int(num) for num in numbers]
 
+def linearize(chunk):
+    chunk = chunk.unsqueeze(0)
+    channels, width, height, depth = chunk.shape
 
+    x_range = torch.linspace(0, 1, width)
+    y_range = torch.linspace(0, 1, height)
+    z_range = torch.linspace(0, 1, depth)
+    
+    x, y, z = torch.meshgrid(x_range, y_range, z_range)
+    coords = torch.stack((x, y, z), dim=-1)
+
+    coords = coords.reshape(-1, 3)
+    values = chunk.reshape(-1, channels)
+
+    return coords, values
+
+class VolumeChunk():
+    def __init__(self, chunks, sizes, position) -> None:
+        super().__init__()
+
+        zipped = sorted(zip(sizes, chunks)) # make sure the is sorted by size in ascending order
+        self.sizes, self.chunks = zip(*zipped)
+        self.position = position
+
+    def get_random_res(self):
+        # Return random chunk that is at least one level larger than input
+        return self.chunks[random.randint(1, len(self.chunks) - 1)]
+
+    def get_sizes(self):
+        return self.sizes
+    
+    def get_res(self, idx):
+        return self.chunks[idx]
+    
+    def get_max_res(self):
+        return self.chunks[-1]
+    
+    def get_min_res(self):
+        return self.chunks[0]
+
+
+class VolumeDataset(Dataset):
+    def __init__(self, path_to_volume_info) -> None:
+        super().__init__()
+
+        self.info = json.loads(open(path_to_volume_info).read())
+        self.directory = os.path.dirname(path_to_volume_info)
+        self.n_chunks = self.info["n_chunks"]
+        self.sizes = self.info["sizes"]
+        self.chunks = []
+
+
+        for i in range(self.n_chunks[0]):
+            for j in range(self.n_chunks[1]):
+                for k in range(self.n_chunks[2]):
+                    chunk_folder = os.path.join(self.directory, "{}_{}_{}".format(i, j, k))
+                    pyramid = []
+                    for size in self.sizes:
+                        file = os.path.join(chunk_folder, "{}_{}_{}.npy".format(size, size, size))
+                        try: 
+                            c = torch.from_numpy(np.load(file))
+                            pyramid.append(c)
+                        except FileNotFoundError:
+                            print("File {} not found".format(file))
+                            continue
+                    chunk = VolumeChunk(pyramid, self.sizes, position=[i, j, k])
+                    self.chunks.append(chunk)
+
+
+        print(self.info)
+
+    def __len__(self):
+        return len(self.chunks)
+    
+    def __getitem__(self, idx):
+        chunk = self.chunks[idx]
+        coords, values = linearize(chunk.get_random_res())
+        # [model input data, [gt_coords, gt_values]]
+        return [chunk.get_min_res(), [coords, values]]
 
 class VideoTime(Dataset):
     def __init__(self, path_to_video, split_num=300):

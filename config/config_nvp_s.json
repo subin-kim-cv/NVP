@@ -5,11 +5,12 @@
         "otype": "EDSR",
         "n_features": 64,
         "n_resblocks": 16,
+        "input_sidelength": [21, 21, 21],
         "res_scale": 1.0,
-        "scale": 2,
-        "no_upsampling": false,
+        "scale": 3,
+        "no_upsampling": true,
         "rgb_range": 1,
-        "n_colors": 3
+        "n_colors": 1
       },
       "2d_encoding_xy": {
           "otype": "DenseGrid",

@@ -42,14 +42,24 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
             for step, (model_input, gt) in enumerate(train_dataloader):
             
                 # GPU
-                model_input = {key: value.cuda() for key, value in model_input.items()}
-                gt = {key: value.cuda() for key, value in gt.items()}
-                gt["img"] = gt["img"].float()
-                gt["img"] = (gt["img"]-127.5)/(127.5)
+                model_input = model_input.float().cuda()
+                model_input = model_input.unsqueeze(0)
+                # print("Min Max model_input", model_input.min(), model_input.max())
 
-                model_output = model(model_input)
 
-                losses = loss_fn(model_output, gt)
+                gt_coords = gt[0].float().cuda()
+                gt_values = gt[1].float().cuda()
+                # print("Min Max gt_coords", gt_coords.min(), gt_coords.max())
+                # print("Min Max gt_values", gt_values.min(), gt_values.max())
+
+
+                # gt = {key: value.cuda() for key, value in gt.items()}
+                # gt["img"] = gt["img"].float()
+                # gt["img"] = (gt["img"]-127.5)/(127.5)
+
+                model_output = model(model_input, gt_coords)
+
+                losses = loss_fn(model_output['model_out'], gt_values)
                 train_loss = 0.
                 for loss_name, loss in losses.items():
                     single_loss = loss.mean()
