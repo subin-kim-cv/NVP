@@ -120,8 +120,12 @@ class EDSR(nn.Module):
         #x = self.sub_mean(x)
         x = self.head(x)
 
+        # print('x min max: ', x.min(), x.max())
+
         res = self.body(x)
         res += x
+
+        # print('res min max: ', res.min(), res.max())
 
         if self.no_upsampling:
             x = res

@@ -10,7 +10,7 @@ import os
 
 def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_checkpoint, model_dir, loss_fn, summary_fn):
 
-    optim = torch.optim.AdamW(lr=lr, params=model.parameters(), weight_decay=0.001)
+    optim = torch.optim.AdamW(lr=lr, params=model.parameters(), weight_decay=0.01)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=epochs, eta_min=1e-5)
 
 
@@ -48,7 +48,7 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
 
 
                 gt_coords = gt[0].float().cuda()
-                gt_values = gt[1].float().cuda()
+                gt_values = gt[1].float().cuda().squeeze()
                 # print("Min Max gt_coords", gt_coords.min(), gt_coords.max())
                 # print("Min Max gt_values", gt_values.min(), gt_values.max())
 
@@ -59,6 +59,8 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
 
                 model_output = model(model_input, gt_coords)
 
+                # print("Min Max model_output", model_output['model_out'].min(), model_output['model_out'].max())
+                # print("-------------------------------------------------")
                 losses = loss_fn(model_output['model_out'], gt_values)
                 train_loss = 0.
                 for loss_name, loss in losses.items():
@@ -89,10 +91,10 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                 writer.add_scalar("total_train_loss", train_loss, total_steps)
 
                 model_output = None
-                
+                #
                 if not total_steps % steps_til_summary:
-                    psnr = summary_fn(model, model_input, gt, writer, total_steps)
-                    tqdm.write("Epoch %d, Total loss %0.6f, psnr: %0.6f" % (epoch, train_loss, psnr))
+                     # psnr = summary_fn(model, model_input, gt, writer, total_steps)
+                     tqdm.write("Epoch %d, Total loss %0.6f" % (epoch, sum(train_losses) / len(train_losses)))
 
                 pbar.update(1)
                 total_steps += 1

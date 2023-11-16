@@ -26,10 +26,10 @@ p.add_argument('--experiment_name', type=str, required=False, default="",
                help='Name of subdirectory in logging_root where summaries and checkpoints will be saved.')
 
 # General training options
-p.add_argument('--lr', type=float, default=1e-2, help='learning rate. default=1e-2')
+p.add_argument('--lr', type=float, default=1e-4, help='learning rate. default=1e-2')
 p.add_argument('--num_epochs', type=int, default=10_000, help='Number of epochs to train for.')
 p.add_argument('--epochs_til_ckpt', type=int, default=1000, help='Time interval in seconds until checkpoint is saved.')
-p.add_argument('--steps_til_summary', type=int, default=1000,
+p.add_argument('--steps_til_summary', type=int, default=20,
                help='Time interval in seconds until tensorboard summary is saved.')
 p.add_argument('--dataset', type=str, required=True, help="Dataset Path, (e.g., /data/UVG/Jockey)")
 p.add_argument('--num_frames', type=int, default=600, required=True, help="Number of video frames to reconstruct")

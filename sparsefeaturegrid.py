@@ -44,6 +44,9 @@ class SparseFeatureGrid(nn.Module):
 
         # tmp_embeddings = tmp_embeddings.permute(0, 2, 3, 4, 1)
         inputs = inputs.unsqueeze(0).unsqueeze(0)
+
+        tmp_embeddings = 2.0 * ((tmp_embeddings - tmp_embeddings.min()) / (tmp_embeddings.max() - tmp_embeddings.min())) - 1
+        # print("min and max of grid", tmp_embeddings.min(), tmp_embeddings.max())
         grid_features = torch.nn.functional.grid_sample(tmp_embeddings, inputs, mode='bilinear', padding_mode='reflection')
         grid_features = grid_features.squeeze()
         grid_features = grid_features.permute(1, 0)

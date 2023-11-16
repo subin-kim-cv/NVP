@@ -52,7 +52,14 @@ class NVP(nn.Module):
     def forward(self, model_input, coords):
         
         features = self.encoder(model_input)
+
+        # print('features min max: ', features.min(), features.max())
+
         net_input = self.sparse_grid(features, coords)
+
+
+
+        # print('net input min max: ', net_input.min(), net_input.max())
 
         # timesteps = model_input['temporal_steps']
         # b, t = timesteps.size(0), timesteps.size(1)
@@ -83,6 +90,7 @@ class NVP(nn.Module):
         
         # modulation latent
         output = self.wrapper(coords=coords, latent=net_input)
+        output = output.squeeze()
         # output = output.reshape((b, t, 3))
 
         return {'model_out': output}

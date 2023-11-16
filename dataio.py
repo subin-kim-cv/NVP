@@ -62,7 +62,7 @@ class VolumeChunk():
 
     def get_random_res(self):
         # Return random chunk that is at least one level larger than input
-        return self.chunks[random.randint(1, len(self.chunks) - 1)]
+        return self.chunks[random.randint(0, len(self.chunks) - 1)]
 
     def get_sizes(self):
         return self.sizes
@@ -112,9 +112,9 @@ class VolumeDataset(Dataset):
     
     def __getitem__(self, idx):
         chunk = self.chunks[idx]
-        coords, values = linearize(chunk.get_random_res())
+        coords, values = linearize(chunk.get_max_res())
         # [model input data, [gt_coords, gt_values]]
-        return [chunk.get_min_res(), [coords, values]]
+        return [chunk.get_random_res(), [coords, values]]
 
 class VideoTime(Dataset):
     def __init__(self, path_to_video, split_num=300):
