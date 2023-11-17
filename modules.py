@@ -11,18 +11,6 @@ class NVP(nn.Module):
     def __init__(self, out_features=3, encoding_config=None, latent_grid=None, **kwargs):
         super().__init__()
 
-        # learnable keyframes xy
-        # self.keyframes_xy = tcnn.Encoding(n_input_dims=2, encoding_config=encoding_config["2d_encoding_xy"])    
-        # assert self.keyframes_xy.dtype == torch.float32
-
-        # # learnable keyframes yt
-        # self.keyframes_yt = tcnn.Encoding(n_input_dims=2, encoding_config=encoding_config["2d_encoding_yt"]) # torch.Tensor       
-        # assert self.keyframes_yt.dtype == torch.float32
-
-        # # learnable keyframes xt
-        # self.keyframes_xt = tcnn.Encoding(n_input_dims=2, encoding_config=encoding_config["2d_encoding_xt"]) # torch.Tensor     
-        # assert self.keyframes_xt.dtype == torch.float32
-
         self.encoder = EDSR(args = encoding_config["encoder"])
         self.latent_grid = latent_grid
         self.sparse_grid = SparseFeatureGrid(level_dim=encoding_config["encoder"]["n_features"], upsample=False)
@@ -36,12 +24,6 @@ class NVP(nn.Module):
                                                                                                  # different omega_0 in the first layer                                                               #  - this is a hyperparameter
                                     )
                 
-        # keyframes + sparse grid
-        # latent_dim = encoding_config["2d_encoding_xy"]["n_levels"]*(encoding_config["2d_encoding_xy"]["n_features_per_level"])
-        # latent_dim += encoding_config["2d_encoding_yt"]["n_levels"]*(encoding_config["2d_encoding_yt"]["n_features_per_level"])
-        # latent_dim += encoding_config["2d_encoding_xt"]["n_levels"]*(encoding_config["2d_encoding_xt"]["n_features_per_level"])
-        # latent_dim += (encoding_config["3d_encoding"]["n_features_per_level"]) # * 9
-
         self.wrapper = modulation.SirenWrapper(self.net, latent_dim = encoding_config["encoder"]["n_features"])
 
     def forward(self, coords, image=None, train=True):
@@ -54,7 +36,7 @@ class NVP(nn.Module):
     def forward_test(self, coords):
         # at test time, we do not need the image but just reconstruct ouput based in coordinates
         coords = coords.unsqueeze(0)
-        net_input = self.sparse_grid(self.latent_grid, coords)
+        net_input = self.sparse_grid.compute_features(self.latent_grid, coords)
         output = self.wrapper(coords=coords, latent=net_input)
         output = output.squeeze()
         return {'model_out': output}
@@ -66,7 +48,7 @@ class NVP(nn.Module):
 
         # print('features min max: ', features.min(), features.max())
 
-        net_input = self.sparse_grid(self.latent_grid, coords)
+        net_input = self.sparse_grid.compute_features(self.latent_grid, coords)
 
         # print('net input min max: ', net_input.min(), net_input.max())
 
