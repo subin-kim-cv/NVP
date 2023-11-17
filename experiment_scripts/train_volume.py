@@ -29,7 +29,7 @@ p.add_argument('--experiment_name', type=str, required=False, default="",
 p.add_argument('--lr', type=float, default=1e-4, help='learning rate. default=1e-2')
 p.add_argument('--num_epochs', type=int, default=10_000, help='Number of epochs to train for.')
 p.add_argument('--epochs_til_ckpt', type=int, default=1000, help='Time interval in seconds until checkpoint is saved.')
-p.add_argument('--steps_til_summary', type=int, default=20,
+p.add_argument('--steps_til_summary', type=int, default=200,
                help='Time interval in seconds until tensorboard summary is saved.')
 p.add_argument('--dataset', type=str, required=True, help="Dataset Path, (e.g., /data/UVG/Jockey)")
 p.add_argument('--num_frames', type=int, default=600, required=True, help="Number of video frames to reconstruct")
@@ -51,7 +51,7 @@ volume_dataset = dataio.VolumeDataset(path_to_volume_info=opt.dataset)
 
 # vid_dataset = dataio.VideoTime(video_path, split_num=opt.num_frames)
 # coord_dataset = dataio.VideoTimeWrapper(vid_dataset, sidelength=vid_dataset.shape)
-dataloader = DataLoader(volume_dataset, shuffle=True, batch_size=1, num_workers=0)
+dataloader = DataLoader(volume_dataset, shuffle=True, batch_size=16, num_workers=0)
 
 params = utils.get_n_params(model) # TODO update this function
 #bpp = params*32/(vid_dataset.vid.shape[0]*vid_dataset.vid.shape[1]*vid_dataset.vid.shape[2])
@@ -82,7 +82,7 @@ with open(train_config_save_path, "w") as json_file:
     json.dump(train_config , json_file, indent=4)
 
 # Define the loss
-loss_fn = partial(loss_functions.image_mse, None)
+loss_fn = partial(loss_functions.image_l1, None)
 summary_fn = partial(utils.write_volume_summary, volume_dataset)
 
 
