@@ -8,7 +8,7 @@ from edsr import EDSR
        
 class NVP(nn.Module):
 
-    def __init__(self, out_features=3, encoding_config=None, **kwargs):
+    def __init__(self, out_features=3, encoding_config=None, latent_grid=None, **kwargs):
         super().__init__()
 
         # learnable keyframes xy
@@ -24,13 +24,8 @@ class NVP(nn.Module):
         # assert self.keyframes_xt.dtype == torch.float32
 
         self.encoder = EDSR(args = encoding_config["encoder"])
-
-        self.sparse_grid = SparseFeatureGrid(level_dim=encoding_config["encoder"]["n_features"], 
-                                    x_resolution=encoding_config["encoder"]["input_sidelength"][0],
-                                    y_resolution=encoding_config["encoder"]["input_sidelength"][1],
-                                    z_resolution=encoding_config["encoder"]["input_sidelength"][2], 
-                                    upsample=False,
-                                    )
+        self.latent_grid = latent_grid
+        self.sparse_grid = SparseFeatureGrid(level_dim=encoding_config["encoder"]["n_features"], upsample=False)
                 
         self.net = modulation.SirenNet(
                                     dim_in = 3, # input dimension, ex. 2d coor
@@ -49,15 +44,29 @@ class NVP(nn.Module):
 
         self.wrapper = modulation.SirenWrapper(self.net, latent_dim = encoding_config["encoder"]["n_features"])
 
-    def forward(self, model_input, coords):
+    def forward(self, coords, image=None, train=True):
+        if train:
+            return self.forward_train(coords, image)
+        else:
+            return self.forward_test(coords)
+
+
+    def forward_test(self, coords):
+        # at test time, we do not need the image but just reconstruct ouput based in coordinates
+        coords = coords.unsqueeze(0)
+        net_input = self.sparse_grid(self.latent_grid, coords)
+        output = self.wrapper(coords=coords, latent=net_input)
+        output = output.squeeze()
+        return {'model_out': output}
+
+
+    def forward_train(self, coords, image):
         
-        features = self.encoder(model_input)
+        self.latent_grid = self.encoder(image)
 
         # print('features min max: ', features.min(), features.max())
 
-        net_input = self.sparse_grid(features, coords)
-
-
+        net_input = self.sparse_grid(self.latent_grid, coords)
 
         # print('net input min max: ', net_input.min(), net_input.max())
 
@@ -94,3 +103,6 @@ class NVP(nn.Module):
         # output = output.reshape((b, t, 3))
 
         return {'model_out': output}
+    
+    def set_latent_grid(self, latent_grid):
+        self.latent_grid = latent_grid
