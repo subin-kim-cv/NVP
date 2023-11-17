@@ -5,7 +5,6 @@
         "otype": "EDSR",
         "n_features": 64,
         "n_resblocks": 16,
-        "input_sidelength": [21, 21, 21],
         "res_scale": 1.0,
         "scale": 3,
         "no_upsampling": true,

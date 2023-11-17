@@ -1,0 +1,9 @@
+{
+    "name": "hemibrain_em_test",
+    "version": "0.1.0",
+    "description": "Hemibrain EM test dataset",
+    "gt_chunk": [128, 128, 128],
+    "voxel_size": [8, 8, 8],
+    "n_chunks": [1, 1, 1],
+    "sizes": [43, 66, 93, 109, 128]
+}
