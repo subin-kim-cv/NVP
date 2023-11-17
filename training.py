@@ -7,6 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm.autonotebook import tqdm
 import numpy as np
 import os
+from loss_functions import compute_psnr
 
 def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_checkpoint, model_dir, loss_fn, summary_fn):
 
@@ -93,11 +94,10 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                 train_losses.append(train_loss.item())
                 writer.add_scalar("total_train_loss", train_loss, total_steps)
 
-                model_output = None
-                #
                 if not total_steps % steps_til_summary:
-                     # psnr = summary_fn(model, model_input, gt)
-                     tqdm.write("Epoch %d, Total loss %0.6f" % (epoch, sum(train_losses) / len(train_losses)))
+                     psnr = compute_psnr(model_output['model_out'], gt_values)
+                     total_loss = round(sum(train_losses) / len(train_losses), 5)
+                     tqdm.write("Epoch {}, Total loss {}, PSNR {}".format(epoch, total_loss, psnr))
 
                 pbar.update(1)
                 total_steps += 1

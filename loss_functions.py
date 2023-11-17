@@ -15,4 +15,10 @@ def image_l1(mask, model_output, gt):
         return {'img_loss': torch.abs(model_output - gt).mean()}
     else:
         return {'img_loss': (mask * torch.abs(model_output - gt)).mean()}
-
+    
+def compute_psnr(pred, gt):
+    pred = pred.squeeze()
+    gt = gt.squeeze()
+    psnr = 10*torch.log10(1 / torch.mean((gt - pred)**2))
+    rounded = round(psnr.item(), 3)
+    return rounded
