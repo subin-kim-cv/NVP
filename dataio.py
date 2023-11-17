@@ -36,6 +36,10 @@ def sort_key(path):
     numbers = re.findall(r'\d+', path)
     return [int(num) for num in numbers]
 
+def volumize(chunk, x_dim, y_dim, z_dim):
+    chunk = chunk.reshape(x_dim, y_dim, z_dim)
+    return chunk
+
 def linearize(chunk):
     chunk = chunk.unsqueeze(0)
     channels, width, height, depth = chunk.shape
@@ -60,20 +64,20 @@ class VolumeChunk():
         self.sizes, self.chunks = zip(*zipped)
         self.position = position
 
-    def get_random_res(self):
+    def get_random_res_chunk(self):
         # Return random chunk that is at least one level larger than input
         return self.chunks[random.randint(0, len(self.chunks) - 1)]
 
     def get_sizes(self):
         return self.sizes
     
-    def get_res(self, idx):
+    def get_res_chunk(self, idx):
         return self.chunks[idx]
     
-    def get_max_res(self):
+    def get_max_res_chunk(self):
         return self.chunks[-1]
     
-    def get_min_res(self):
+    def get_min_res_chunk(self):
         return self.chunks[0]
 
 
@@ -112,9 +116,18 @@ class VolumeDataset(Dataset):
     
     def __getitem__(self, idx):
         chunk = self.chunks[idx]
-        coords, values = linearize(chunk.get_max_res())
+        coords, values = linearize(chunk.get_random_res_chunk())
+
+        n_input = chunk.get_sizes()[0] ** 2
+
+        indices = torch.randperm(n_input)
+        coords = coords[indices, :]
+        values = values[indices, :]
+
+        input_data = chunk.get_min_res_chunk()
+
         # [model input data, [gt_coords, gt_values]]
-        return [chunk.get_random_res(), [coords, values]]
+        return [input_data, [coords, values]]
 
 class VideoTime(Dataset):
     def __init__(self, path_to_video, split_num=300):

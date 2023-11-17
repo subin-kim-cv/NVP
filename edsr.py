@@ -118,6 +118,7 @@ class EDSR(nn.Module):
 
     def forward(self, x):
         #x = self.sub_mean(x)
+        x = x.unsqueeze(1)
         x = self.head(x)
 
         # print('x min max: ', x.min(), x.max())

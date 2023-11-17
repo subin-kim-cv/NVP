@@ -2,25 +2,12 @@ import torch
 import torch.nn as nn
 
 class SparseFeatureGrid(nn.Module):
-    def __init__(self, level_dim=2, x_resolution=300, y_resolution=300, z_resolution=600, upsample=False):
+    def __init__(self, level_dim=2, upsample=False):
         super().__init__()
 
         self.level_dim = level_dim # latent dimension
-
-        self.x_resolution = x_resolution
-        self.y_resolution = y_resolution
-        self.z_resolution = z_resolution
-
         self.latents = None
-
-        # self.embeddings = nn.Parameter(torch.empty(self.t_resolution, self.x_resolution, self.y_resolution, self.level_dim))
-
         self.upsample = upsample
-        # self.reset_parameters()
-    
-    # def reset_parameters(self):
-    #     std = 1e-4
-    #     self.embeddings.data.uniform_(-std, std)
 
     def forward(self, latents, inputs):
         # inputs [0, 1]
@@ -31,31 +18,17 @@ class SparseFeatureGrid(nn.Module):
             tmp_embeddings = torch.nn.functional.interpolate(tmp_embeddings, scale_factor=2, mode='trilinear')
             tmp_embeddings = tmp_embeddings.squeeze()
             tmp_embeddings = tmp_embeddings.permute(1, 2, 3, 0)
-            tmp_shape = tmp_embeddings.shape
-            z_res = tmp_shape[0]
-            x_res = tmp_shape[1]
-            y_res = tmp_shape[2]
-
         else:
-            z_res = self.z_resolution
-            x_res = self.x_resolution
-            y_res = self.y_resolution
             tmp_embeddings = latents
 
         # tmp_embeddings = tmp_embeddings.permute(0, 2, 3, 4, 1)
-        inputs = inputs.unsqueeze(0).unsqueeze(0)
+        inputs = inputs.unsqueeze(1).unsqueeze(1)
 
         tmp_embeddings = 2.0 * ((tmp_embeddings - tmp_embeddings.min()) / (tmp_embeddings.max() - tmp_embeddings.min())) - 1
         # print("min and max of grid", tmp_embeddings.min(), tmp_embeddings.max())
         grid_features = torch.nn.functional.grid_sample(tmp_embeddings, inputs, mode='bilinear', padding_mode='reflection')
         grid_features = grid_features.squeeze()
-        grid_features = grid_features.permute(1, 0)
-
-        
-
-        
-
-
+        grid_features = grid_features.permute(0, 2, 1)
 
         # round down
         # t_coord = inputs[:, 0]

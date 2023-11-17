@@ -128,20 +128,20 @@ class SirenWrapper(nn.Module):
 
         self.net = net
 
-        self.modulator = None
-        if exists(latent_dim):
-            self.modulator = Modulator(
-                dim_in = latent_dim,
-                dim_hidden = net.dim_hidden,
-                num_layers = net.num_layers
-            )
+        # self.modulator = None
+        # if exists(latent_dim):
+        #     self.modulator = Modulator(
+        #         dim_in = latent_dim,
+        #         dim_hidden = net.dim_hidden,
+        #         num_layers = net.num_layers
+        #     )
 
     def forward(self, coords, latent = None):
-        modulate = exists(self.modulator)
-        assert not (modulate ^ exists(latent)), 'latent vector must be only supplied if `latent_dim` was passed in on instantiation'
+        # modulate = exists(self.modulator)
+        # assert not (modulate ^ exists(latent)), 'latent vector must be only supplied if `latent_dim` was passed in on instantiation'
 
-        mods = self.modulator(latent) if modulate else None
-        out = self.net(coords, mods)
+        # mods = self.modulator(latent) if modulate else None
+        out = self.net(coords, mods=None)
 
         return out
 

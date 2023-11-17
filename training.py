@@ -10,6 +10,7 @@ import os
 
 def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_checkpoint, model_dir, loss_fn, summary_fn):
 
+
     optim = torch.optim.AdamW(lr=lr, params=model.parameters(), weight_decay=0.01)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=epochs, eta_min=1e-5)
 
@@ -33,7 +34,8 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
         for epoch in range(epochs):
             
             if not epoch % epochs_til_checkpoint and epoch:
-                torch.save(model.state_dict(),
+                torch.save({"model": model.state_dict(),
+                            "latent_grid": model.latent_grid},
                            os.path.join(checkpoints_dir, 'model_epoch_%04d.pth' % epoch))
                 np.savetxt(os.path.join(checkpoints_dir, 'train_losses_epoch_%04d.txt' % epoch),
                            np.array(train_losses))
@@ -43,12 +45,12 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
             
                 # GPU
                 model_input = model_input.float().cuda()
-                model_input = model_input.unsqueeze(0)
+                model_input = model_input
                 # print("Min Max model_input", model_input.min(), model_input.max())
 
 
                 gt_coords = gt[0].float().cuda()
-                gt_values = gt[1].float().cuda().squeeze()
+                gt_values = gt[1].float().cuda()
                 # print("Min Max gt_coords", gt_coords.min(), gt_coords.max())
                 # print("Min Max gt_values", gt_values.min(), gt_values.max())
 
@@ -57,7 +59,7 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                 # gt["img"] = gt["img"].float()
                 # gt["img"] = (gt["img"]-127.5)/(127.5)
 
-                model_output = model(model_input, gt_coords)
+                model_output = model(gt_coords, model_input)
 
                 # print("Min Max model_output", model_output['model_out'].min(), model_output['model_out'].max())
                 # print("-------------------------------------------------")
@@ -77,7 +79,8 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                     torch.save({'epoch': total_steps,
                                         'model': model.state_dict(),
                                         'optimizer': optim.state_dict(),
-                                        'scheduler': scheduler.state_dict(),    
+                                        'scheduler': scheduler.state_dict(),
+                                        'latent_grid': model.latent_grid,    
                                         }, os.path.join(checkpoints_dir, 'model_best.pth'))
 
                     best_psnr = tmp_psnr
@@ -93,7 +96,7 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                 model_output = None
                 #
                 if not total_steps % steps_til_summary:
-                     # psnr = summary_fn(model, model_input, gt, writer, total_steps)
+                     # psnr = summary_fn(model, model_input, gt)
                      tqdm.write("Epoch %d, Total loss %0.6f" % (epoch, sum(train_losses) / len(train_losses)))
 
                 pbar.update(1)
@@ -102,7 +105,8 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
         torch.save({'epoch': total_steps,
                     'model': model.state_dict(),
                     'optimizer': optim.state_dict(),
-                    'scheduler': scheduler.state_dict(),    
+                    'scheduler': scheduler.state_dict(),  
+                    'latent_grid': model.latent_grid,  
                     }, os.path.join(checkpoints_dir, f'model_final.pth'))
                                                 
         psnr = summary_fn(model, model_input, gt, writer, total_steps)
