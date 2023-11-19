@@ -126,6 +126,11 @@ class VolumeDataset(Dataset):
 
         input_data = chunk.get_min_res_chunk()
 
+        # normalize data between -1, 1
+        input_data = (input_data - 0.5) * 2.0
+        coords = (coords - 0.5) * 2.0
+        values = (values - 0.5) * 2.0
+
         # [model input data, [gt_coords, gt_values]]
         return [input_data, [coords, values]]
 
