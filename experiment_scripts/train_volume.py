@@ -32,7 +32,6 @@ p.add_argument('--epochs_til_ckpt', type=int, default=1000, help='Time interval 
 p.add_argument('--steps_til_summary', type=int, default=200,
                help='Time interval in seconds until tensorboard summary is saved.')
 p.add_argument('--dataset', type=str, required=True, help="Dataset Path, (e.g., /data/UVG/Jockey)")
-p.add_argument('--num_frames', type=int, default=600, required=True, help="Number of video frames to reconstruct")
 opt = p.parse_args()
 
 
@@ -48,13 +47,9 @@ model = modules.NVP(type='nvp', out_features=1, encoding_config=config["nvp"])
 model.cuda()
 
 volume_dataset = dataio.VolumeDataset(path_to_volume_info=opt.dataset)
-
-# vid_dataset = dataio.VideoTime(video_path, split_num=opt.num_frames)
-# coord_dataset = dataio.VideoTimeWrapper(vid_dataset, sidelength=vid_dataset.shape)
 dataloader = DataLoader(volume_dataset, shuffle=True, batch_size=16, num_workers=0)
 
 params = utils.get_n_params(model) # TODO update this function
-#bpp = params*32/(vid_dataset.vid.shape[0]*vid_dataset.vid.shape[1]*vid_dataset.vid.shape[2])
 
 root_path = os.path.join(opt.logging_root, opt.experiment_name)
 if os.path.exists(root_path):
@@ -71,7 +66,6 @@ with open(config_save_path, "w") as json_file:
     json.dump(config, json_file, indent=4)
 
 train_config = {
-    "num_frames": opt.num_frames,
     "dataset": opt.dataset,
     "lr": opt.lr,
     "num_epochs": opt.num_epochs,
@@ -96,10 +90,6 @@ f.write("#"*30+" Training Info "+"#"*30)
 f.write(f"\n{command_line}")
 f.write(f"\n - experiment name: {opt.experiment_name}") 
 f.write(f"\n - video name: {opt.dataset}")
-# f.write(f"\n - video shape [f, w, h, c]: {vid_dataset.vid.shape}")
-# f.write(f"\n - cur bpp: {utils.get_n_params(model)*32/(vid_dataset.vid.shape[0]*vid_dataset.vid.shape[1]*vid_dataset.vid.shape[2])}")
-# f.write(f"\n - quantized bpp: {((utils.get_n_params(model))*8+(utils.get_n_params(model.wrapper))*24)/(vid_dataset.vid.shape[0]*vid_dataset.vid.shape[1]*vid_dataset.vid.shape[2])}")
-# f.write(f"\n - bpp : {bpp}")
 f.write(f"\n - epochs: {opt.num_epochs}")
 f.write(f"\n - learning rate: {opt.lr}")
 f.write("#"*30+" Training Info "+"#"*30)
@@ -112,7 +102,7 @@ f.close()
 
 psnr = training.train(model=model, train_dataloader=dataloader, epochs=opt.num_epochs, lr=opt.lr,
                         steps_til_summary=opt.steps_til_summary, epochs_til_checkpoint=opt.epochs_til_ckpt,
-                        model_dir=root_path, loss_fn=loss_fn, summary_fn=summary_fn)
+                        model_dir=root_path, summary_fn=summary_fn)
 
 
 f = open(results_file_path, 'a')

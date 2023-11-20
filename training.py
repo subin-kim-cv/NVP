@@ -8,13 +8,15 @@ from tqdm.autonotebook import tqdm
 import numpy as np
 import os
 from loss_functions import compute_psnr
+import torch.nn as nn
 
-def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_checkpoint, model_dir, loss_fn, summary_fn):
+def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_checkpoint, model_dir, summary_fn):
 
+    optim = torch.optim.Adam(lr=lr, params=model.parameters())
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optim, milestones=[2000, 4000, 6000, 8000], gamma=0.5)
 
-    optim = torch.optim.AdamW(lr=lr, params=model.parameters(), weight_decay=0.01)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=epochs, eta_min=1e-5)
-
+    loss_fn = nn.L1Loss()
+    train_loss = utils.Averager()
 
     summaries_dir = os.path.join(model_dir, 'summaries')
     utils.cond_mkdir(summaries_dir)
@@ -51,9 +53,9 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
 
 
                 gt_coords = gt[0].float().cuda()
-                gt_values = gt[1].float().cuda()
-                # print("Min Max gt_coords", gt_coords.min(), gt_coords.max())
-                # print("Min Max gt_values", gt_values.min(), gt_values.max())
+                gt_values = gt[1].float().cuda().squeeze()
+                #print("Min Max gt_coords", gt_coords.min(), gt_coords.max())
+                #print("Min Max gt_values", gt_values.min(), gt_values.max())
 
 
                 # gt = {key: value.cuda() for key, value in gt.items()}
@@ -64,17 +66,8 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
 
                 # print("Min Max model_output", model_output['model_out'].min(), model_output['model_out'].max())
                 # print("-------------------------------------------------")
-                losses = loss_fn(model_output['model_out'], gt_values)
-                train_loss = 0.
-                for loss_name, loss in losses.items():
-                    single_loss = loss.mean()
-
-                    writer.add_scalar(loss_name, single_loss, total_steps)
-                    tmp_psnr = 10*torch.log10(4/single_loss)
-                    writer.add_scalar(loss_name+"_psnr", tmp_psnr, total_steps)
-                    writer.add_scalar("lr", float(scheduler.get_last_lr()[0]), total_steps)
-                    train_loss += single_loss
-
+                loss = loss_fn(model_output['model_out'], gt_values)
+                train_loss.add(loss.item())
 
                 if tmp_psnr > best_psnr and not (total_steps+1) % (200):
                     torch.save({'epoch': total_steps,
@@ -87,17 +80,17 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                     best_psnr = tmp_psnr
 
                 optim.zero_grad()
-                train_loss.backward()
+                loss.backward()
                 optim.step()
                 scheduler.step()
 
-                train_losses.append(train_loss.item())
-                writer.add_scalar("total_train_loss", train_loss, total_steps)
+                # train_losses.append(train_loss.item())
+                # writer.add_scalar("total_train_loss", train_loss, total_steps)
 
                 if not total_steps % steps_til_summary:
                      psnr = compute_psnr(model_output['model_out'], gt_values)
-                     total_loss = round(sum(train_losses) / len(train_losses), 5)
-                     tqdm.write("Epoch {}, Total loss {}, PSNR {}".format(epoch, total_loss, psnr))
+                     # total_loss = round(sum(train_loss) / len(train_loss), 5)
+                     tqdm.write("Epoch {}, Total loss {}, PSNR {}".format(epoch, train_loss.item(), psnr))
 
                 pbar.update(1)
                 total_steps += 1
@@ -109,9 +102,9 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                     'latent_grid': model.latent_grid,  
                     }, os.path.join(checkpoints_dir, f'model_final.pth'))
                                                 
-        psnr = summary_fn(model, model_input, gt, writer, total_steps)
-        writer.close()
-        np.savetxt(os.path.join(checkpoints_dir, 'train_losses_final.txt'), np.array(train_losses))   
+        # psnr = summary_fn(model, model_input, gt, writer, total_steps)
+        # writer.close()
+        # np.savetxt(os.path.join(checkpoints_dir, 'train_losses_final.txt'), np.array(train_losses))   
 
         return psnr
 

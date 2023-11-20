@@ -37,7 +37,7 @@ def sort_key(path):
     return [int(num) for num in numbers]
 
 def volumize(chunk, x_dim, y_dim, z_dim):
-    chunk = chunk.reshape(x_dim, y_dim, z_dim)
+    chunk = chunk.reshape(chunk.shape[0], x_dim, y_dim, z_dim)
     return chunk
 
 def linearize(chunk):
@@ -82,7 +82,7 @@ class VolumeChunk():
 
 
 class VolumeDataset(Dataset):
-    def __init__(self, path_to_volume_info) -> None:
+    def __init__(self, path_to_volume_info, train=True) -> None:
         super().__init__()
 
         self.info = json.loads(open(path_to_volume_info).read())
@@ -90,6 +90,7 @@ class VolumeDataset(Dataset):
         self.n_chunks = self.info["n_chunks"]
         self.sizes = self.info["sizes"]
         self.chunks = []
+        self.train = train # True of Train, If false it's a test setting
 
 
         for i in range(self.n_chunks[0]):
@@ -114,15 +115,18 @@ class VolumeDataset(Dataset):
     def __len__(self):
         return len(self.chunks)
     
-    def __getitem__(self, idx):
+    def __getitem__(self, idx, ):
         chunk = self.chunks[idx]
-        coords, values = linearize(chunk.get_random_res_chunk())
+        
+        if self.train:
+            coords, values = linearize(chunk.get_random_res_chunk())
+            n_input = chunk.get_sizes()[0] ** 2
+            indices = torch.randperm(n_input)
+            coords = coords[indices, :]
+            values = values[indices, :]
 
-        n_input = chunk.get_sizes()[0] ** 2
-
-        indices = torch.randperm(n_input)
-        coords = coords[indices, :]
-        values = values[indices, :]
+        else:
+            coords, values = linearize(chunk.get_max_res_chunk())
 
         input_data = chunk.get_min_res_chunk()
 

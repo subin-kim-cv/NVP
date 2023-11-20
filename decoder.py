@@ -1,6 +1,5 @@
 import torch.nn as nn
 
-
 class MLP(nn.Module):
 
     def __init__(self, in_dim, out_dim, n_hidden, n_neurons):
@@ -15,9 +14,4 @@ class MLP(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
-
-        out = self.layers(x)
-        return out
-        # shape = x.shape[:-1]
-        # x = self.layers(x.view(-1, x.shape[-1]))
-        # return x.view(*shape, -1)
+        return self.layers(x)

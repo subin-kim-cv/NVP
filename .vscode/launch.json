@@ -44,7 +44,6 @@
                 "--logging_root=./logs",
                 "--experiment_name=volume-encoder-64",
                 "--dataset=data/volumes/res-64-new/info.json",
-                "--num_frames=20",
                 "--config=./config/config_nvp_s.json"
             ]
         },

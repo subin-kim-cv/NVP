@@ -6,6 +6,19 @@ from torchvision.utils import make_grid
 
 from pytorch_msssim import ms_ssim
 
+class Averager():
+
+    def __init__(self):
+        self.n = 0.0
+        self.v = 0.0
+
+    def add(self, v, n=1.0):
+        self.v = (self.v * self.n + v * n) / (self.n + n)
+        self.n += n
+
+    def item(self):
+        return self.v
+
 def msssim_fn(output, target):
     if output.size(-2) >= 160:
         msssim = ms_ssim(output.float().detach(), target.detach(), data_range=1, size_average=True)
