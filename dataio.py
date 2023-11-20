@@ -11,6 +11,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 import json
 
+from utils import make_coord
+
 def get_mgrid(sidelen, dim=2):
     '''Generates a flattened grid of (x,y,...) coordinates in a range of 0 to 1.'''
     if isinstance(sidelen, int):
@@ -44,14 +46,16 @@ def linearize(chunk):
     chunk = chunk.unsqueeze(0)
     channels, width, height, depth = chunk.shape
 
-    x_range = torch.linspace(0, 1, width)
-    y_range = torch.linspace(0, 1, height)
-    z_range = torch.linspace(0, 1, depth)
-    
-    x, y, z = torch.meshgrid(x_range, y_range, z_range)
-    coords = torch.stack((x, y, z), dim=-1)
+    coords = make_coord((width, height, depth)).cuda()
 
-    coords = coords.reshape(-1, 3)
+    # x_range = torch.linspace(0, 1, width)
+    # y_range = torch.linspace(0, 1, height)
+    # z_range = torch.linspace(0, 1, depth)
+    
+    # x, y, z = torch.meshgrid(x_range, y_range, z_range)
+    # coords = torch.stack((x, y, z), dim=-1)
+
+    # coords = coords.reshape(-1, 3)
     values = chunk.reshape(-1, channels)
 
     return coords, values
@@ -119,9 +123,10 @@ class VolumeDataset(Dataset):
         chunk = self.chunks[idx]
         
         if self.train:
-            coords, values = linearize(chunk.get_random_res_chunk())
+            random_res = chunk.get_random_res_chunk()
+            coords, values = linearize(random_res)
             n_input = chunk.get_sizes()[0] ** 2
-            indices = torch.randperm(n_input)
+            indices = torch.randperm(coords.shape[0] - 1)[:n_input]
             coords = coords[indices, :]
             values = values[indices, :]
 
@@ -132,7 +137,7 @@ class VolumeDataset(Dataset):
 
         # normalize data between -1, 1
         input_data = (input_data - 0.5) * 2.0
-        coords = (coords - 0.5) * 2.0
+        # coords = (coords - 0.5) * 2.0
         values = (values - 0.5) * 2.0
 
         # [model input data, [gt_coords, gt_values]]
