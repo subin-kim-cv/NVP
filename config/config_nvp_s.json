@@ -4,7 +4,7 @@
         "otype": "EDSR",
         "n_features": 64,
         "n_resblocks": 16,
-        "res_scale": 1.0,
+        "res_scale": 0.1,
         "scale": 3,
         "no_upsampling": true,
         "rgb_range": 1,

@@ -60,7 +60,7 @@ model.set_latent_grid(checkpoint['latent_grid'])
 
 '''Load Volume Dataset'''
 volume_dataset = dataio.VolumeDataset(path_to_volume_info=opt.dataset, train=False)
-dataloader = DataLoader(volume_dataset, shuffle=True, batch_size=16, num_workers=0)
+dataloader = DataLoader(volume_dataset, shuffle=True, batch_size=2, num_workers=0)
 
 results = {}
 results_dir = os.path.join(root_path, 'results')
@@ -76,14 +76,13 @@ for step, (model_input, gt) in enumerate(dataloader):
 
         test_coords = gt[0].cuda()
         prediction = model(coords = test_coords, train=False)
-        
+
+        volume = dataio.volumize(prediction['model_out'], x_dim=128, y_dim=128, z_dim=128)
+        volume = (volume - volume.min())/(volume.max()-volume.min())
+        volume = volume.squeeze()
+
         print(prediction["model_out"].shape)
         print("Min Max prediction", prediction['model_out'].min(), prediction['model_out'].max())
-
-        volume = dataio.volumize(prediction['model_out'], x_dim=64, y_dim=64, z_dim=64)
-        volume = (volume - volume.min())/(volume.max()-volume.min())
-        # volume = volume.reshape(-1, 128, 128, 128)
-        volume = volume.squeeze()
 
         volume = volume.cpu().numpy()
         np.save(os.path.join(results_dir, f"volume_{str(0).zfill(5)}.npy"), volume[0, :, :, :].squeeze())

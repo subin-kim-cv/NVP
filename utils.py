@@ -7,7 +7,6 @@ from torchvision.utils import make_grid
 from pytorch_msssim import ms_ssim
 
 class Averager():
-
     def __init__(self):
         self.n = 0.0
         self.v = 0.0
@@ -119,9 +118,30 @@ def write_video_time_summary(vid_dataset, model, model_input, gt, writer, total_
     return psnr
 
 
+
+
 def min_max_summary(name, tensor, writer, total_steps):
     writer.add_scalar(name + '_min', tensor.min().detach().cpu().numpy(), total_steps)
     writer.add_scalar(name + '_max', tensor.max().detach().cpu().numpy(), total_steps)
+
+
+# from LIIF code base (Chen. 2021)
+def make_coord(shape, ranges=None, flatten=True):
+    """ Make coordinates at grid centers.
+    """
+    coord_seqs = []
+    for i, n in enumerate(shape):
+        if ranges is None:
+            v0, v1 = -1, 1
+        else:
+            v0, v1 = ranges[i]
+        r = (v1 - v0) / (2 * n)
+        seq = v0 + r + (2 * r) * torch.arange(n).float()
+        coord_seqs.append(seq)
+    ret = torch.stack(torch.meshgrid(*coord_seqs), dim=-1)
+    if flatten:
+        ret = ret.view(-1, ret.shape[-1])
+    return ret
 
 
 
