@@ -25,7 +25,7 @@ def resize(data, sizes):
 def main():
     parser = argparse.ArgumentParser(description="Resampled a given (3D) numpy array using trilinear interpolation.")
     parser.add_argument('--path', type=str, help='Path to info.json file of dataset.')
-    parser.add_argument('--sizes', type=str, default="3,66,93,109", help='Side lengths of downsampled data.')
+    parser.add_argument('--sizes', type=str, default="21,33,46,56", help='Side lengths of downsampled data.')
 
     args = parser.parse_args()
 
@@ -44,6 +44,7 @@ def main():
         for y in range(n_chunks[1]):
             for z in range(n_chunks[2]):
                 chunk_folder = os.path.join(root, "{}_{}_{}".format(x, y, z))
+                print("Resampling data in {}".format(chunk_folder))
                 data = np.load(os.path.join(chunk_folder, "{}_{}_{}.npy".format(x_chunk_size, y_chunk_size, z_chunk_size)))
                 data = torch.from_numpy(data)
                 results = resize(data, sizes)

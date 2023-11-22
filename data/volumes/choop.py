@@ -1,19 +1,28 @@
 import numpy as np
 import os
+import json
 
 import argparse
 
 def main():
     
     parser = argparse.ArgumentParser(description="This script chopps a 3D numpy array into n chunks per dimension.")
-    parser.add_argument('--path', type=str, help='Path to numpy array to downsample.')
-    parser.add_argument('--n_chunk', type=str, default="2,2,2", help='Side lengths of downsampled data.')
+    parser.add_argument('--path', type=str, help='Path to info.json file of dataset.')
+    # parser.add_argument('--n_chunk', type=str, default="2,2,2", help='Side lengths of downsampled data.')
 
     args = parser.parse_args()
     print(args)
     
-    n_chunks = [int(num) for num in args.n_chunk.split(',')]
-    data = np.load(args.path)
+    info = json.loads(open(args.path).read())
+    gt_size = info["gt_size"]
+
+    n_chunks = info["n_chunks"]
+
+    data_path = os.path.join(os.path.dirname(args.path), "gt", "{}_{}_{}.npy".format(gt_size[0], gt_size[1], gt_size[2]))
+    data = np.load(data_path)
+    data = data.astype(np.float32)
+    # normalize to [0, 1]
+    data = (data - np.min(data)) / (np.max(data) - np.min(data))
 
     if len(data.shape) != 3:
         raise ValueError("Data must be 3D, but is {}".format(data.shape))
