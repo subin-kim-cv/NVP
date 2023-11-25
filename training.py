@@ -28,7 +28,9 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
     total_steps = 0
     best_psnr = 0
 
-    with tqdm(total=epochs) as pbar:
+    n_iterations = epochs * (len(train_dataloader) / train_dataloader.batch_size)
+
+    with tqdm(total=n_iterations) as pbar:
         train_losses = []
 
         for epoch in range(epochs):
@@ -38,9 +40,8 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                            os.path.join(checkpoints_dir, 'model_epoch_%04d.pth' % epoch))
                 np.savetxt(os.path.join(checkpoints_dir, 'train_losses_epoch_%04d.txt' % epoch),
                            np.array(train_losses))
-
             
-            for step, (model_input, gt) in enumerate(train_dataloader):
+            for step, (model_input, gt, chunk_position) in enumerate(train_dataloader):
             
                 # GPU
                 model_input = model_input.float().cuda()
@@ -60,7 +61,7 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                                         'model': model.state_dict(),
                                         'optimizer': optim.state_dict(),
                                         'scheduler': scheduler.state_dict(),
-                                        'latent_grid': model.latent_grid,    
+                                        # 'latent_grid': model.latent_grid,    
                                         }, os.path.join(checkpoints_dir, 'model_best.pth'))
 
                     best_psnr = psnr
@@ -81,7 +82,7 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                     'model': model.state_dict(),
                     'optimizer': optim.state_dict(),
                     'scheduler': scheduler.state_dict(),  
-                    'latent_grid': model.latent_grid,  
+                    # 'latent_grid': model.latent_grid,  
                     }, os.path.join(checkpoints_dir, f'model_final.pth'))
         
         return psnr

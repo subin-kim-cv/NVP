@@ -56,11 +56,11 @@ root_path = os.path.join(opt.logging_root, opt.experiment_name)
 path = os.path.join(root_path, 'checkpoints', "model_best.pth")
 checkpoint = torch.load(path)
 model.load_state_dict(checkpoint['model'])
-model.set_latent_grid(checkpoint['latent_grid'])
+# model.set_latent_grid(checkpoint['latent_grid'])
 
 '''Load Volume Dataset'''
 volume_dataset = dataio.VolumeDataset(path_to_volume_info=opt.dataset, train=False)
-dataloader = DataLoader(volume_dataset, shuffle=True, batch_size=2, num_workers=0)
+dataloader = DataLoader(volume_dataset, shuffle=False, batch_size=1, num_workers=0)
 
 results = {}
 results_dir = os.path.join(root_path, 'results')
@@ -70,20 +70,29 @@ psnrs = []
 model.cuda()
 model.eval()
 
-for step, (model_input, gt) in enumerate(dataloader):
+for step, (model_input, gt, chunk_position) in enumerate(dataloader):
 
     with torch.no_grad():
+        chunk_position = chunk_position.squeeze()
+
+        c_x = chunk_position[0].item()
+        c_y = chunk_position[1].item()
+        c_z = chunk_position[2].item()
 
         test_coords = gt[0].cuda()
-        prediction = model(coords = test_coords, train=False)
+        model_input = model_input.cuda()
+
+        prediction = model(coords=test_coords, image=model_input, train=True)
 
         volume = dataio.volumize(prediction['model_out'], x_dim=128, y_dim=128, z_dim=128)
         volume = (volume - volume.min())/(volume.max()-volume.min())
         volume = volume.squeeze()
 
-        print(prediction["model_out"].shape)
-        print("Min Max prediction", prediction['model_out'].min(), prediction['model_out'].max())
+        # print(prediction["model_out"].shape)
+        # print("Min Max prediction", prediction['model_out'].min(), prediction['model_out'].max())
 
         volume = volume.cpu().numpy()
-        np.save(os.path.join(results_dir, f"volume_{str(0).zfill(5)}.npy"), volume[0, :, :, :].squeeze())
+        np.save(os.path.join(results_dir, "volume_{}_{}_{}.npy".format(c_x, c_y, c_z)), volume)
+        print("Rendered volume chunk {}_{}_{}...".format(c_x, c_y, c_z))
+print("Done!")
     

@@ -39,14 +39,11 @@ def main():
                 ]
                 print("Chunk shape: {}".format(chunk.shape))
 
-                directory = os.path.join(os.path.dirname(args.path), "{}_{}_{}".format(x, y, z))
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
-
+                directory = os.path.join(os.path.dirname(args.path), "chunks")
                 np.save(
                     os.path.join(
                         directory,
-                        "{}_{}_{}.npy".format(chunk.shape[0], chunk.shape[1], chunk.shape[2]),
+                        "{}_{}_{}.npy".format(x, y, z),
                     ),
                     chunk,
                 )

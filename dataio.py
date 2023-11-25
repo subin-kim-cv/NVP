@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import Dataset
 import json
 import torch.nn.functional as F
+import math
 
 from utils import make_coord
 
@@ -25,48 +26,31 @@ def linearize(chunk):
     channels, width, height, depth = chunk.shape
 
     coords = make_coord((width, height, depth)).cuda()
-
-    # x_range = torch.linspace(0, 1, width)
-    # y_range = torch.linspace(0, 1, height)
-    # z_range = torch.linspace(0, 1, depth)
-    
-    # x, y, z = torch.meshgrid(x_range, y_range, z_range)
-    # coords = torch.stack((x, y, z), dim=-1)
-
-    # coords = coords.reshape(-1, 3)
     values = chunk.reshape(-1, channels)
 
     return coords, values
 
 class VolumeChunk():
-    def __init__(self, chunks, sizes, position) -> None:
+    def __init__(self, chunk, position) -> None:
         super().__init__()
-
-        zipped = sorted(zip(sizes, chunks)) # make sure the is sorted by size in ascending order
-        self.sizes, self.chunks = zip(*zipped)
+        self.data = chunk
         self.position = position
 
-    def get_random_res_chunk(self):
-        # Return random chunk that is at least one level larger than input
-        return self.chunks[random.randint(0, len(self.chunks) - 1)]
 
-    def get_sizes(self):
-        return self.sizes
-    
-    def get_res_chunk(self, idx):
-        return self.chunks[idx]
-    
-    def get_max_res_chunk(self):
-        return self.chunks[-1]
-    
-    def get_eval_res_chunk(self):
-        high_res = self.chunks[-1].unsqueeze(0).unsqueeze(0)
-        eval = F.interpolate(high_res, scale_factor=2, mode='trilinear', align_corners=False)
-        return eval.squeeze()
-    
-    def get_min_res_chunk(self):
-        return self.chunks[0]
+    def get_random_crop(self, x_dim, y_dim, z_dim):
+        # Return random crop of chunk with given dimensions
+        x, y, z = self.data.shape
+        x_start = random.randint(0, x - x_dim)
+        y_start = random.randint(0, y - y_dim)
+        z_start = random.randint(0, z - z_dim)
 
+        return self.data[x_start:x_start + x_dim, y_start:y_start + y_dim, z_start:z_start + z_dim]
+
+    def get_chunk(self):
+        return self.data 
+    
+    def get_position(self):
+        return self.position
 
 class VolumeDataset(Dataset):
     def __init__(self, path_to_volume_info, train=True) -> None:
@@ -75,27 +59,23 @@ class VolumeDataset(Dataset):
         self.info = json.loads(open(path_to_volume_info).read())
         self.directory = os.path.dirname(path_to_volume_info)
         self.n_chunks = self.info["n_chunks"]
-        self.sizes = self.info["sizes"]
         self.chunks = []
         self.train = train # True of Train, If false it's a test setting
+        self.base_resolution = self.info["model_input_size"]
 
+        data_dir = os.path.join(os.path.dirname(path_to_volume_info), "chunks")
 
-        for i in range(self.n_chunks[0]):
-            for j in range(self.n_chunks[1]):
-                for k in range(self.n_chunks[2]):
-                    chunk_folder = os.path.join(self.directory, "{}_{}_{}".format(i, j, k))
-                    pyramid = []
-                    for size in self.sizes:
-                        file = os.path.join(chunk_folder, "{}_{}_{}.npy".format(size, size, size))
-                        try: 
-                            c = torch.from_numpy(np.load(file))
-                            pyramid.append(c)
-                        except FileNotFoundError:
-                            print("File {} not found".format(file))
-                            continue
-                    chunk = VolumeChunk(pyramid, self.sizes, position=[i, j, k])
-                    self.chunks.append(chunk)
+        for name in os.listdir(data_dir):
+            file_path = os.path.join(data_dir, name)
+            data = torch.from_numpy(np.load(file_path))
+            
+            parts = name.replace(".npy", "").split('_')
+            pos = [int(part) for part in parts]
 
+            print("Loading chunk at position {}".format(pos))
+
+            chunk = VolumeChunk(data, position=pos)
+            self.chunks.append(chunk)
 
         print(self.info)
 
@@ -104,23 +84,40 @@ class VolumeDataset(Dataset):
     
     def __getitem__(self, idx):
         chunk = self.chunks[idx]
-        
-        if self.train:
-            random_res = chunk.get_random_res_chunk()
-            coords, values = linearize(random_res)
-            n_input = chunk.get_sizes()[0] ** 2
-            indices = torch.randperm(coords.shape[0] - 1)[:n_input]
-            coords = coords[indices, :]
-            values = values[indices, :]
-        else:
-            coords, values = linearize(chunk.get_eval_res_chunk())
+        scale = random.uniform(1, 4)
 
-        input_data = chunk.get_min_res_chunk()
+        b_res = self.base_resolution
 
+        gt_chunk_res = math.floor(scale * self.base_resolution)
+
+
+        crop = chunk.get_random_crop(gt_chunk_res, gt_chunk_res, gt_chunk_res)
+        if not self.train:
+            crop = chunk.get_chunk()
+
+        # downsample crop to base resolution
+        input_data = F.interpolate(crop.unsqueeze(0).unsqueeze(0), size=[b_res, b_res, b_res], mode='trilinear', align_corners=False)
+        input_data = input_data.squeeze(1)
+
+        # if self.train:
+        # generate gt data
+        gt_coords, gt_values = linearize(crop)
+
+        # sample n random points from gt data
+        n_samples = self.base_resolution ** 3
+        indices = torch.randperm(gt_coords.shape[0])[:n_samples]
+        coords = gt_coords[indices, :]
+        values = gt_values[indices, :]
+
+        if not self.train:
+            coords = gt_coords
+            values = gt_values
+            
         # normalize data between -1, 1
         input_data = (input_data - 0.5) * 2.0
         # coords = (coords - 0.5) * 2.0
         values = (values - 0.5) * 2.0
 
+        positions = torch.tensor(chunk.get_position()).squeeze()
         # [model input data, [gt_coords, gt_values]]
-        return [input_data, [coords, values]]
+        return [input_data, [coords, values], positions]

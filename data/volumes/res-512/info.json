@@ -3,8 +3,8 @@
     "version": "0.1.0",
     "description": "Hemibrain EM test dataset",
     "gt_size": [512, 512, 512],
-    "chunk_size": [64, 64, 64],
+    "chunk_size": [128, 128, 128],
     "voxel_size": [8, 8, 8],
-    "n_chunks": [8, 8, 8],
-    "sizes": [21, 33, 46, 56, 64]
+    "n_chunks": [4, 4, 4],
+    "model_input_size": 32
 }

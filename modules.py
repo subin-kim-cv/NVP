@@ -26,25 +26,24 @@ class NVP(nn.Module):
         self.decoder = MLP(in_dim=model_in, out_dim=out_features, n_neurons=mlp_n_neurons, n_hidden=mlp_n_layers)
 
     def forward(self, coords, image=None, train=True):
-        if train:
-            return self.forward_train(coords, image)
-        else:
-            return self.forward_test(coords)
+        # if train:
+        return self.forward_train(coords, image)
+        # else:
+        #     return self.forward_test(coords)
 
 
-    def forward_test(self, coords):
-        # at test time, we do not need the image but just reconstruct ouput based in coordinates
-        net_input = self.sparse_grid.compute_features(self.latent_grid, coords)
-        output = self.decoder(net_input)
-        output = output.squeeze()
-        return {'model_out': output}
+    # def forward_test(self, coords):
+    #     # at test time, we do not need the image but just reconstruct ouput based in coordinates
+    #     output = self.sparse_grid.compute_features(self.latent_grid, coords, self.decoder)
+    #     # output = self.decoder(net_input)
+    #     output = output.squeeze()
+    #     return {'model_out': output}
 
 
     def forward_train(self, coords, image):        
         self.latent_grid = self.encoder(image)
-        net_input = self.sparse_grid.compute_features(self.latent_grid, coords)
-        output = self.decoder(net_input)
-        output = output.squeeze()
+        output = self.sparse_grid.compute_features(self.latent_grid, coords, self.decoder)
+        output = output.squeeze(-1)
         return {'model_out': output}
     
     def set_latent_grid(self, latent_grid):

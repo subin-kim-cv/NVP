@@ -42,8 +42,8 @@
             "justMyCode": true,
             "args": [
                 "--logging_root=./logs",
-                "--experiment_name=volume-encoder-64",
-                "--dataset=data/volumes/res-64-new/info.json",
+                "--experiment_name=volume-encoder-512",
+                "--dataset=data/volumes/res-512/info.json",
                 "--config=./config/config_nvp_s.json"
             ]
         },
@@ -55,10 +55,10 @@
             "justMyCode": true,
             "args": [
                 "--logging_root=./logs",
-                "--experiment_name=volume-encoder-64",
-                "--dataset=data/volumes/res-64-new/info.json",
+                "--experiment_name=volume-encoder-512",
+                "--dataset=data/volumes/res-512/info.json",
                 "--num_frames=128",
-                "--config=./logs/volume-encoder-64/config.json",
+                "--config=./logs/volume-encoder-512/config.json",
                 "--save",
                 "--t_interp=4"
             ]

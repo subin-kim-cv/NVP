@@ -14,4 +14,6 @@ class MLP(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
-        return self.layers(x)
+        shape = x.shape[:-1]
+        x = self.layers(x.view(-1, x.shape[-1]))
+        return x.view(*shape, -1)
