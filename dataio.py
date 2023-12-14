@@ -9,6 +9,8 @@ from torch.utils.data import Dataset
 import json
 import torch.nn.functional as F
 import math
+from PIL import Image
+import torchvision.transforms as transforms
 
 from utils import make_coord
 
@@ -84,34 +86,33 @@ class VolumeDataset(Dataset):
     
     def __getitem__(self, idx):
         chunk = self.chunks[idx]
-        scale = random.uniform(1, 4)
 
+        scale = random.uniform(1, 3)
         b_res = self.base_resolution
-
         gt_chunk_res = math.floor(scale * self.base_resolution)
 
+        if self.train:
+            crop = chunk.get_random_crop(gt_chunk_res, gt_chunk_res, gt_chunk_res)
+            input_data = F.interpolate(crop.unsqueeze(0).unsqueeze(0), size=[b_res, b_res, b_res], mode='trilinear', align_corners=False)
+            input_data = input_data.squeeze(1)
 
-        crop = chunk.get_random_crop(gt_chunk_res, gt_chunk_res, gt_chunk_res)
-        if not self.train:
+        else:
             crop = chunk.get_chunk()
+            input_data = crop.unsqueeze(0)
 
-        # downsample crop to base resolution
-        input_data = F.interpolate(crop.unsqueeze(0).unsqueeze(0), size=[b_res, b_res, b_res], mode='trilinear', align_corners=False)
-        input_data = input_data.squeeze(1)
-
-        # if self.train:
-        # generate gt data
         gt_coords, gt_values = linearize(crop)
 
-        # sample n random points from gt data
-        n_samples = self.base_resolution ** 3
-        indices = torch.randperm(gt_coords.shape[0])[:n_samples]
-        coords = gt_coords[indices, :]
-        values = gt_values[indices, :]
-
-        if not self.train:
-            coords = gt_coords
-            values = gt_values
+        if self.train:
+            # sample n random points from gt data
+            n_samples = self.base_resolution ** 3
+            indices = torch.randperm(gt_coords.shape[0])[:n_samples]
+            coords = gt_coords[indices, :]
+            values = gt_values[indices, :]
+        else:
+            t_size = crop.squeeze().shape
+            factor = 3
+            coords = make_coord((t_size[0] * factor, t_size[1] * factor, t_size[2] * factor)).cuda()
+            values = torch.zeros_like(coords[:, 0]).unsqueeze(1).cuda()
             
         # normalize data between -1, 1
         input_data = (input_data - 0.5) * 2.0
@@ -121,3 +122,39 @@ class VolumeDataset(Dataset):
         positions = torch.tensor(chunk.get_position()).squeeze()
         # [model input data, [gt_coords, gt_values]]
         return [input_data, [coords, values], positions]
+    
+
+class ImageDataset(Dataset):
+    def __init__(self, path_to_info, train=True) -> None:
+        super().__init__()
+        info = json.loads(open(path_to_info).read())
+        self.is_train = train
+        self.n_images = info["n_images"]
+        self.path = os.path.join(os.path.dirname(path_to_info), "train" if self.is_train else "test")
+        self.files = os.listdir(self.path)
+        self.anisotropic_factor = 8  # TODO make dynamic
+
+    def __len__(self):
+        return len(self.files)
+    
+    def __getitem__(self, idx):
+        
+        file_name = self.files[idx]
+        path = os.path.join(self.path, file_name)
+
+        image = Image.open(path) # Load the image
+        transform = transforms.ToTensor() # Transform to tensor
+        gt = transform(image).cuda() # Transform to tensor, already in [0, 1]
+    
+        batched_gt = gt.unsqueeze(0)
+        anisotropic_shape = [batched_gt.shape[-2], int(batched_gt.shape[-1] / self.anisotropic_factor)]
+        input = F.interpolate(batched_gt, size=anisotropic_shape, mode='nearest')
+        input = input.squeeze(0)
+
+        coords = make_coord(batched_gt.shape[-2:]).cuda()
+
+        gt = gt.permute(1, 2, 0)
+        gt = gt.view(-1, gt.shape[-1])
+
+        return [input, coords, gt]
+
