@@ -26,8 +26,8 @@
             "module": "experiment_scripts.train_images",
             "justMyCode": true,
             "args": [
-                "--experiment_name=images-h01-denoised-small",
-                "--dataset=data/minnen-denoised-2D-small/info.json",
+                "--experiment_name=images-h01-denoised",
+                "--dataset=data/minnen-denoised-2D/info.json",
                 "--config=./config/config_cvr_s.json"
             ]
         },
@@ -38,8 +38,8 @@
             "module": "experiment_scripts.eval_images",
             "justMyCode": true,
             "args": [
-                "--experiment_name=images-h01-denoised-small",
-                "--dataset=data/minnen-denoised-2D-small/info.json",
+                "--experiment_name=images-h01-denoised",
+                "--dataset=data/minnen-denoised-2D/info.json",
                 "--config=./config/config_cvr_s.json",
             ]
         },

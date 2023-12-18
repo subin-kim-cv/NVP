@@ -1,5 +1,5 @@
 {
-    "name": "Minnen 2D Denoised Small",
+    "name": "Minnen 2D Denoised",
     "version": "0.1.0",
     "description": "H01 denoised (Minnen et al.)",
     "gt_size": [
@@ -11,5 +11,5 @@
         4,
         30
     ],
-    "isotropic_test_data": "False"
+    "isotropic_test_data": "True"
 }
