@@ -1,7 +1,7 @@
 {
     "name": "hemibrain_em_test",
     "version": "0.1.0",
-    "description": "Hemibrain EM test dataset",
+    "description": "Janelia FIB-EM dataset (Takemura et al. 2015)",
     "gt_size": [512, 512, 512],
     "chunk_size": [128, 128, 128],
     "voxel_size": [8, 8, 8],

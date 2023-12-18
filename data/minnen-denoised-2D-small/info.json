@@ -1,0 +1,15 @@
+{
+    "name": "Minnen 2D Denoised Small",
+    "version": "0.1.0",
+    "description": "H01 denoised (Minnen et al.)",
+    "gt_size": [
+        256,
+        256
+    ],
+    "voxel_size": [
+        4,
+        4,
+        30
+    ],
+    "n_images": 100
+}

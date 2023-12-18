@@ -5,3 +5,4 @@ events*
 *.npy
 *.pt
 logs/**
+*.pth

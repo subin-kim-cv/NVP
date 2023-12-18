@@ -1,18 +1,18 @@
 {
   "nvp": {
     "encoder": {
-        "otype": "EDSR",
-        "n_features": 64,
-        "n_resblocks": 16,
-        "res_scale": 0.1,
-        "scale": 3,
-        "no_upsampling": true,
-        "rgb_range": 1,
-        "n_colors": 1
-      },
-      "network": {
-          "n_neurons": 256,
-          "n_hidden_layers": 5
-      }
+      "otype": "EDSR",
+      "n_features": 32,
+      "n_resblocks": 16,
+      "res_scale": 1,
+      "scale": 3,
+      "no_upsampling": true,
+      "rgb_range": 1,
+      "n_colors": 1
+    },
+    "network": {
+      "n_neurons": 256,
+      "n_hidden_layers": 5
+    }
   }
 }

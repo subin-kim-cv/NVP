@@ -1,0 +1,10 @@
+{
+    "name": "hemibrain_em_test",
+    "version": "0.1.0",
+    "description": "H01 denoised (Minnen et al.)",
+    "gt_size": [256, 256, 256],
+    "chunk_size": [128, 128, 128],
+    "voxel_size": [8, 8, 8],
+    "n_chunks": [2, 2, 2],
+    "model_input_size": 32
+}
