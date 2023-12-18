@@ -1,0 +1,6 @@
+{
+    "dataset": "data/minnen-denoised-2D-small/info.json",
+    "lr": 0.0001,
+    "num_epochs": 1000,
+    "experiment_name": "images-h01-denoised-small"
+}

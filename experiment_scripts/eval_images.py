@@ -11,6 +11,10 @@ import configargparse
 import json
 import numpy as np
 from torch.utils.data import DataLoader  # noqa: E402
+import math
+from torch.nn import functional as F
+
+import PIL.Image as Image
 
 command_line = ""
 for arg in sys.argv:
@@ -25,14 +29,6 @@ p.add_argument('--experiment_name', type=str, required=False, default="",
 
 '''Dataset configure'''
 p.add_argument('--dataset', type=str, required=True, help="Dataset Path, (e.g., /data/UVG/Honeybee)")
-p.add_argument('--num_frames', type=int, default=600, required=True, help="Number of video frames to reconstruct")
-
-'''Save configure'''
-p.add_argument("--save", default=False, action="store_true", help="Save the frames")
-
-'''Additional properties'''
-p.add_argument('--s_interp', type=int, default=-1, required=False, help="Superresolution scale")
-p.add_argument('--t_interp', type=int, default=-1, required=False, help="Video frame interpolation scale")
 
 opt = p.parse_args()
 
@@ -45,10 +41,10 @@ with open(opt.config, 'r') as f:
     config = json.load(f)
 
 # Define the model.
-model = modules.NVP(out_features=1, encoding_config=config["nvp"], export_features=True)
+model = modules.CVR(out_features=1, encoding_config=config["cvr"], export_features=False)
 model.cuda()
 
-config = config["nvp"]
+config = config["cvr"]
 
 # Model Loading
 root_path = os.path.join(opt.logging_root, opt.experiment_name)
@@ -59,7 +55,7 @@ model.load_state_dict(checkpoint['model'])
 # model.set_latent_grid(checkpoint['latent_grid'])
 
 '''Load Volume Dataset'''
-volume_dataset = dataio.VolumeDataset(path_to_volume_info=opt.dataset, train=False)
+volume_dataset = dataio.ImageDataset(path_to_info=opt.dataset, train=False)
 dataloader = DataLoader(volume_dataset, shuffle=False, batch_size=1, num_workers=0)
 
 results = {}
@@ -70,29 +66,37 @@ psnrs = []
 model.cuda()
 model.eval()
 
-for step, (model_input, gt, chunk_position) in enumerate(dataloader):
+unit_multiplier = 255.0
+
+for step, (model_input, coords, file_name) in enumerate(dataloader):
 
     with torch.no_grad():
-        chunk_position = chunk_position.squeeze()
 
-        c_x = chunk_position[0].item()
-        c_y = chunk_position[1].item()
-        c_z = chunk_position[2].item()
+        prediction = model(coords=coords, image=model_input)
+        prediction = prediction["model_out"]
 
-        test_coords = gt[0].cuda()
-        model_input = model_input.cuda()
+        side_length = int(math.sqrt(prediction.shape[1]))
+        image = prediction.squeeze().view(side_length, side_length).cpu().numpy()
+        # save image to disk as png
+        result_name = os.path.join(results_dir, "result_{}".format(file_name[0]))
+        image = Image.fromarray(np.uint8(image * unit_multiplier))
+        image.save(result_name)
 
-        prediction = model(coords=test_coords, image=model_input, train=True, chunk_position=chunk_position)
+        # export normal interpolated images
+        nearest = F.interpolate(model_input, size=[side_length, side_length], mode='nearest')
+        bilinear = F.interpolate(model_input, size=[side_length, side_length], mode='bilinear', align_corners=False)
 
-        volume = dataio.volumize(prediction['model_out'], x_dim=192, y_dim=192, z_dim=192)
-        volume = (volume - volume.min())/(volume.max()-volume.min())
-        volume = volume.squeeze()
+        nearest = nearest.squeeze().cpu().numpy()
+        bilinear = bilinear.squeeze().cpu().numpy()
 
-        # print(prediction["model_out"].shape)
-        # print("Min Max prediction", prediction['model_out'].min(), prediction['model_out'].max())
+        # save image to disk as png
+        nearest_name = os.path.join(results_dir, "nearest_{}".format(file_name[0]))
+        image = Image.fromarray(np.uint8(nearest * unit_multiplier))
+        image.save(nearest_name)
 
-        volume = volume.cpu().numpy()
-        np.save(os.path.join(results_dir, "volume_{}_{}_{}.npy".format(c_x, c_y, c_z)), volume)
-        print("Rendered volume chunk {}_{}_{}...".format(c_x, c_y, c_z))
+        linear_name = os.path.join(results_dir, "bilinear_{}".format(file_name[0]))
+        image = Image.fromarray(np.uint8(bilinear * unit_multiplier))
+        image.save(linear_name)
+
 print("Done!")
     

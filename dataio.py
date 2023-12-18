@@ -132,7 +132,7 @@ class ImageDataset(Dataset):
         self.n_images = info["n_images"]
         self.path = os.path.join(os.path.dirname(path_to_info), "train" if self.is_train else "test")
         self.files = os.listdir(self.path)
-        self.anisotropic_factor = 8  # TODO make dynamic
+        self.anisotropic_factor = 7.5  # TODO make dynamic
 
     def __len__(self):
         return len(self.files)
@@ -145,16 +145,26 @@ class ImageDataset(Dataset):
         image = Image.open(path) # Load the image
         transform = transforms.ToTensor() # Transform to tensor
         gt = transform(image).cuda() # Transform to tensor, already in [0, 1]
-    
+
         batched_gt = gt.unsqueeze(0)
-        anisotropic_shape = [batched_gt.shape[-2], int(batched_gt.shape[-1] / self.anisotropic_factor)]
+        anisotropic_shape = [batched_gt.shape[-2], int(math.floor(batched_gt.shape[-1] / self.anisotropic_factor))]
         input = F.interpolate(batched_gt, size=anisotropic_shape, mode='nearest')
         input = input.squeeze(0)
 
         coords = make_coord(batched_gt.shape[-2:]).cuda()
 
-        gt = gt.permute(1, 2, 0)
-        gt = gt.view(-1, gt.shape[-1])
+        gt_linear = gt.permute(1, 2, 0)
+        gt_linear = gt_linear.view(-1, gt_linear.shape[-1])
 
-        return [input, coords, gt]
+        if self.is_train:
+            coords = make_coord(batched_gt.shape[-2:]).cuda()
+            return [input, coords, gt_linear]
+        else:
+            output_shape = [batched_gt.shape[-2], int(batched_gt.shape[-1] * self.anisotropic_factor + 1)]
+            coords = make_coord(output_shape).cuda()
+            return [gt, coords, file_name]
+
+
+    
+       
 
