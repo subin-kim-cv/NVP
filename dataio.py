@@ -129,10 +129,13 @@ class ImageDataset(Dataset):
         super().__init__()
         info = json.loads(open(path_to_info).read())
         self.is_train = train
-        self.n_images = info["n_images"]
         self.path = os.path.join(os.path.dirname(path_to_info), "train" if self.is_train else "test")
         self.files = os.listdir(self.path)
         self.anisotropic_factor = 7.5  # TODO make dynamic
+        self.isotropic_test_data = info["isotropic_test_data"]
+    
+    def has_isotropic_test_data(self):
+        return self.isotropic_test_data
 
     def __len__(self):
         return len(self.files)
@@ -156,13 +159,14 @@ class ImageDataset(Dataset):
         gt_linear = gt.permute(1, 2, 0)
         gt_linear = gt_linear.view(-1, gt_linear.shape[-1])
 
-        if self.is_train:
+        if self.is_train or self.isotropic_test_data:
             coords = make_coord(batched_gt.shape[-2:]).cuda()
-            return [input, coords, gt_linear]
+            return [input, coords, gt_linear, file_name]
         else:
             output_shape = [batched_gt.shape[-2], int(batched_gt.shape[-1] * self.anisotropic_factor + 1)]
             coords = make_coord(output_shape).cuda()
-            return [gt, coords, file_name]
+        
+        return [gt, coords, gt_linear, file_name]
 
 
     
