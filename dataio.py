@@ -125,14 +125,21 @@ class VolumeDataset(Dataset):
     
 
 class ImageDataset(Dataset):
-    def __init__(self, path_to_info, train=True) -> None:
+    def __init__(self, path_to_info, train=True, folder=None) -> None:
         super().__init__()
         info = json.loads(open(path_to_info).read())
         self.is_train = train
-        self.path = os.path.join(os.path.dirname(path_to_info), "train" if self.is_train else "test")
+        self.folder = folder
+        self.path = os.path.join(os.path.dirname(path_to_info), "train" if self.is_train else "test_sequence")
+
+        if self.folder is not None:
+            self.path = os.path.join(self.path, self.folder)
+
         self.files = os.listdir(self.path)
         self.anisotropic_factor = 7.5  # TODO make dynamic
+        self.avg_pool = torch.nn.AvgPool2d(kernel_size=[1, int(self.anisotropic_factor)])
         self.isotropic_test_data = info["isotropic_test_data"]
+
     
     def has_isotropic_test_data(self):
         return self.isotropic_test_data
@@ -150,8 +157,7 @@ class ImageDataset(Dataset):
         gt = transform(image).cuda() # Transform to tensor, already in [0, 1]
 
         batched_gt = gt.unsqueeze(0)
-        anisotropic_shape = [batched_gt.shape[-2], int(math.floor(batched_gt.shape[-1] / self.anisotropic_factor))]
-        input = F.interpolate(batched_gt, size=anisotropic_shape, mode='nearest')
+        input = self.avg_pool(batched_gt)
         input = input.squeeze(0)
 
         coords = make_coord(batched_gt.shape[-2:]).cuda()

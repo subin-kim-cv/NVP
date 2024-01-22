@@ -15,6 +15,7 @@ import math
 from torch.nn import functional as F
 
 from loss_functions import compute_psnr
+from ignite.metrics import PSNR
 
 
 import PIL.Image as Image
@@ -52,7 +53,7 @@ config = config["cvr"]
 # Model Loading
 root_path = os.path.join(opt.logging_root, opt.experiment_name)
 
-path = os.path.join(root_path, 'checkpoints', "model_best.pth")
+path = os.path.join(root_path, 'checkpoints', "model_latest.pth")
 checkpoint = torch.load(path)
 model.load_state_dict(checkpoint['model'])
 # model.set_latent_grid(checkpoint['latent_grid'])
@@ -68,6 +69,8 @@ os.makedirs(results_dir, exist_ok=True)
 result_psnrs = []
 nearest_psnrs = []
 bilinear_psnrs = []
+
+psnr_metric = PSNR(data_range=1.0)
 
 model.cuda()
 model.eval()
@@ -86,16 +89,32 @@ for step, (model_input, coords, gt, file_name) in enumerate(dataloader):
         # export normal interpolated images
         nearest = F.interpolate(model_input, size=[side_length, side_length], mode='nearest')
         bilinear = F.interpolate(model_input, size=[side_length, side_length], mode='bilinear', align_corners=False)
+        nearest = nearest.squeeze(0)
+        bilinear = bilinear.squeeze(0)
 
         ## compute PSNR and other metrics of isotropic test data is available 
         if dataset.has_isotropic_test_data():
-            result_psnr = compute_psnr(prediction, gt)
+            # result_psnr = compute_psnr(prediction, gt)
+
+            # print prediction min max
+            # print("Min Max prediction", prediction.min(), prediction.max())
+            # print("Min Max GT", gt.min(), gt.max())
+
+            psnr_metric.update((prediction, gt))
+            result_psnr = psnr_metric.compute()
+            psnr_metric.reset()
             result_psnrs.append(result_psnr)
 
-            nearest_psnr = compute_psnr(nearest.squeeze().view(side_length * side_length, 1), gt)
+            nearest_tmp = nearest.view(1, side_length * side_length, 1)
+            psnr_metric.update((nearest_tmp, gt))
+            nearest_psnr = psnr_metric.compute()
+            psnr_metric.reset()
             nearest_psnrs.append(nearest_psnr)
 
-            bilinear_psnr = compute_psnr(bilinear.squeeze().view(side_length * side_length, 1), gt)
+            bilinear_tmp = bilinear.view(1, side_length * side_length, 1)
+            psnr_metric.update((bilinear_tmp, gt))
+            bilinear_psnr = psnr_metric.compute()
+            psnr_metric.reset()
             bilinear_psnrs.append(bilinear_psnr)
 
             print("Result PSNR: {}, Bilinear PSNR: {}, Nearest PSNR: {}".format(result_psnr, bilinear_psnr, nearest_psnr))
@@ -104,19 +123,29 @@ for step, (model_input, coords, gt, file_name) in enumerate(dataloader):
         nearest_name = os.path.join(results_dir, "nearest_{}".format(file_name[0]))
         linear_name = os.path.join(results_dir, "bilinear_{}".format(file_name[0]))
 
+        folder_name = file_name[0].split(".")[0]
+        results_folder = os.path.join(results_dir, folder_name)
+
+        if not os.path.exists(results_folder):
+            os.makedirs(results_folder)
+
         if dataset.has_isotropic_test_data():
+
             result_psnr_str = str(result_psnr).replace(".", ",")
-            result_name = os.path.join(results_dir, "result_psnr_{}_{}".format(result_psnr_str, file_name[0]))
+            result_name = os.path.join(results_folder, "result_psnr_{}_{}".format(file_name[0], result_psnr_str))
 
             nearest_psnr_str = str(nearest_psnr).replace(".", ",")
-            nearest_name = os.path.join(results_dir, "nearest_psnr_{}_{}".format(nearest_psnr_str, file_name[0]))
+            nearest_name = os.path.join(results_folder, "nearest_psnr_{}_{}".format(file_name[0], nearest_psnr_str))
 
             bilinear_psnr_str = str(bilinear_psnr).replace(".", ",")
-            linear_name = os.path.join(results_dir, "bilinear_psnr_{}_{}".format(bilinear_psnr_str, file_name[0]))
+            linear_name = os.path.join(results_folder, "bilinear_psnr_{}_{}".format(file_name[0], bilinear_psnr_str))
+
+            gt_name = os.path.join(results_folder, "gt_{}".format(file_name[0]))
 
         image = prediction.squeeze().view(side_length, side_length).cpu().numpy()
         nearest = nearest.squeeze().cpu().numpy()
         bilinear = bilinear.squeeze().cpu().numpy()
+        gt = gt.squeeze().view(bilinear.shape).cpu().numpy()
 
         image = Image.fromarray(np.uint8(image * unit_multiplier))
         image.save(result_name)
@@ -127,6 +156,9 @@ for step, (model_input, coords, gt, file_name) in enumerate(dataloader):
 
         image = Image.fromarray(np.uint8(bilinear * unit_multiplier))
         image.save(linear_name)
+
+        image = Image.fromarray(np.uint8(gt * unit_multiplier))
+        image.save(gt_name)
 
 print("-------------------------------")
 print("Average Result PSNR: {}".format(np.mean(result_psnrs)))

@@ -5,6 +5,8 @@ import numpy as np
 import os
 from loss_functions import compute_psnr
 import torch.nn as nn
+from ignite.metrics import PSNR
+
 
 import wandb
 
@@ -25,9 +27,11 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
     utils.cond_mkdir(checkpoints_dir)
 
     total_steps = 0
-    best_loss = 10
 
     train_losses = []
+
+    psnr_metric = PSNR(data_range=1.0)  # Use data_range=255 for images in [0, 255]
+
 
     for epoch in tqdm(range(epochs)):
         if not epoch % epochs_til_checkpoint and epoch:
@@ -43,19 +47,13 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
             loss = loss_fn(model_output['model_out'], gt)
             train_loss.add(loss.item())
 
-            psnr = compute_psnr(model_output['model_out'], gt)
+            psnr_metric.update((model_output['model_out'], gt))
+            psnr = psnr_metric.compute()
+            psnr_metric.reset()
+
+            # psnr = compute_psnr(model_output['model_out'], gt)
 
             wandb.log({"train_loss": loss.item(), "train_psnr": psnr})
-
-            if loss.item() < best_loss:
-                torch.save({'epoch': total_steps,
-                                    'model': model.state_dict(),
-                                    'optimizer': optim.state_dict(),
-                                    'scheduler': scheduler.state_dict(),
-                                    # 'latent_grid': model.latent_grid,    
-                                    }, os.path.join(checkpoints_dir, 'model_best.pth'))
-
-                best_loss = loss.item()
             
             optim.zero_grad()
             loss.backward()
@@ -64,8 +62,14 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
             if not total_steps % steps_til_summary:
                 tqdm.write("Epoch {}, Total loss {}, PSNR {}".format(epoch, train_loss.item(), psnr))
 
+                torch.save({'epoch': total_steps,
+                                    'model': model.state_dict(),
+                                    'optimizer': optim.state_dict(),
+                                    'scheduler': scheduler.state_dict(),
+                                    }, os.path.join(checkpoints_dir, 'model_latest.pth'))
+
             total_steps += 1
-            scheduler.step()
+        scheduler.step()
 
     wandb.finish()
 

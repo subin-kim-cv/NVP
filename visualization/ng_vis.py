@@ -10,8 +10,10 @@ import webbrowser
 
 def add_example_layers(state):
     a = np.load(
-        "/home/jakobtroidl/Desktop/NVP/logs/volume-encoder-64/results/volume_00000.npy"
+        "/home/jakobtroidl/Desktop/NVP/nearest-nvp-mip-0.npy"
     )
+
+    print(a.shape)
 
     b = a < 0.08160067
     b = b.astype(np.uint8) * 255

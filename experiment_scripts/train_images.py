@@ -13,6 +13,8 @@ from functools import partial
 import shutil
 import json
 
+import wandb
+
 command_line = ""
 for arg in sys.argv:
     command_line += arg
@@ -21,17 +23,18 @@ for arg in sys.argv:
 
 p = configargparse.ArgumentParser()
 p.add('-c', '--config', required=True,  help='Path to config file. (e.g., ./config/config_small.json)')
-p.add_argument('--logging_root', type=str, default='./logs_nvp', help='root for logging')
+p.add_argument('--logging_root', type=str, default='./logs', help='root for logging')
 p.add_argument('--experiment_name', type=str, required=False, default="",
                help='Name of subdirectory in logging_root where summaries and checkpoints will be saved.')
 
 # General training options
 p.add_argument('--lr', type=float, default=1e-4, help='learning rate. default=1e-2')
-p.add_argument('--num_epochs', type=int, default=1_000, help='Number of epochs to train for.')
+p.add_argument('--num_epochs', type=int, default=6000, help='Number of epochs to train for.')
 p.add_argument('--epochs_til_ckpt', type=int, default=1000, help='Time interval in seconds until checkpoint is saved.')
 p.add_argument('--steps_til_summary', type=int, default=50,
                help='Time interval in seconds until tensorboard summary is saved.')
 p.add_argument('--dataset', type=str, required=True, help="Dataset Path, (e.g., /data/UVG/Jockey)")
+p.add_argument('--batch_size', type=int, default=8, help="Batch size")
 opt = p.parse_args()
 
 
@@ -47,7 +50,7 @@ model = modules.CVR(type='cvr', out_features=1, encoding_config=config["cvr"])
 model.cuda()
 
 image_dataset = dataio.ImageDataset(path_to_info=opt.dataset)
-dataloader = DataLoader(image_dataset, shuffle=True, batch_size=32, num_workers=0)
+dataloader = DataLoader(image_dataset, shuffle=True, batch_size=opt.batch_size, num_workers=0)
 
 
 params = utils.get_n_params(model) # TODO update this function
@@ -103,7 +106,7 @@ f.close()
 
 psnr = training.train(model=model, train_dataloader=dataloader, epochs=opt.num_epochs, lr=opt.lr,
                         steps_til_summary=opt.steps_til_summary, epochs_til_checkpoint=opt.epochs_til_ckpt,
-                        model_dir=root_path, summary_fn=summary_fn)
+                        model_dir=root_path, summary_fn=summary_fn, opt=opt)
 
 
 f = open(results_file_path, 'a')

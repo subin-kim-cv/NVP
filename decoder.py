@@ -1,15 +1,24 @@
 import torch.nn as nn
 import torch
 import json
+from pos_enc import PositionalEncoding
 
 class MLP(nn.Module):
 
-    def __init__(self, in_dim, out_dim, n_hidden, n_neurons):
+    def __init__(self, in_dim, out_dim, n_hidden, n_neurons, pos_enc=False):
         super().__init__()
+
         layers = []
         self.in_dim = in_dim
+        
+        if pos_enc:
+            self.pos_enc = PositionalEncoding(num_octaves=2)
+            self.in_dim = self.pos_enc.d_out(in_dim)
+            layers.append(self.pos_enc)
+        
         self.out_dim = out_dim
-        lastv = in_dim
+        lastv = self.in_dim
+
         for i in range(n_hidden):
             layers.append(nn.Linear(lastv, n_neurons))
             layers.append(nn.ReLU())
@@ -28,7 +37,6 @@ class MLP(nn.Module):
 
         dummy_input = torch.ones(1, self.in_dim).cuda()
         dummy_out = self(dummy_input)
-
 
         activation = "Relu"
         weights_and_biases = {}

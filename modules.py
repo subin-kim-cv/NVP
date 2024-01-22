@@ -3,8 +3,11 @@ from sparsefeaturegrid import SparseFeatureGrid, SparseFeatureGrid2D
 from edsr_2d import EDSR2D
 from edsr import EDSR
 from decoder import MLP
+from src.encoders import rdn
+from src.encoders import swinir
+from src.decoder import inr
+from src.decoder.field_siren import FieldSiren
 import os
-import json
 
 class CVR(nn.Module):
     def __init__(self, out_features=3, encoding_config=None, latent_grid=None, export_features=False, **kwargs):
@@ -12,6 +15,7 @@ class CVR(nn.Module):
 
         self.feat_unfold = False
         self.local_ensemble = False
+        self.pos_enc = False
         self.export_features = export_features
 
         # hyper parameters
@@ -22,7 +26,7 @@ class CVR(nn.Module):
 
         model_in = n_features + 2 
         if self.feat_unfold:
-            model_in = n_features * (2**2) + 2 # expand features by local neighborhood
+            model_in = n_features * (3**2) + 2 # expand features by local neighborhood
 
         # module for latent grid processing
         self.latent_grid = latent_grid
@@ -30,8 +34,11 @@ class CVR(nn.Module):
 
         # trainable parameters
         self.encoder = EDSR2D(args = encoding_config["encoder"])
-        self.decoder = MLP(in_dim=model_in, out_dim=out_features, n_neurons=mlp_n_neurons, n_hidden=mlp_n_layers)
-
+        # self.encoder = rdn.make_rdn()
+        # self.encoder = swinir.make_swinir()
+        # self.decoder = MLP(in_dim=model_in, out_dim=out_features, n_neurons=mlp_n_neurons, n_hidden=mlp_n_layers, pos_enc=self.pos_enc)
+        # self.decoder = inr.Gabor(in_features=model_in, hidden_features=mlp_n_neurons, hidden_layers=mlp_n_layers, out_features=out_features)
+        self.decoder = FieldSiren(d_coordinate=model_in, d_out=out_features)
 
     def forward(self, image, coords):
         latent_grid = self.encoder(image)
